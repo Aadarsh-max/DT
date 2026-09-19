@@ -8,10 +8,8 @@ export default function StatsRow({ stats }) {
       <StatCard
         icon={ClipboardCheck}
         label="Total Test Cases"
-        value={formatNumber(stats.total)}
-        sub={`↑ ${formatPercent(stats.totalDelta)}`}
-        subTone="success"
-        note="vs last run"
+        value={formatNumber(stats.totalCases)}
+        note="in this project"
       />
       <StatCard
         icon={Play}
@@ -38,13 +36,7 @@ export default function StatsRow({ stats }) {
         sub={formatPercent(stats.failedPct)}
         subTone="danger"
       />
-      <StatCard
-        icon={Bug}
-        tone="danger"
-        label="Bugs Found"
-        value={formatNumber(stats.bugs)}
-        note="This run"
-      />
+      <StatCard icon={Bug} tone="danger" label="Bugs Found" value={formatNumber(stats.bugs)} note="This run" />
     </div>
   );
 }

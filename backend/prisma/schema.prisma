@@ -214,6 +214,7 @@ model TestRun {
   deployRisk    Float?
   startedAt     DateTime?
   finishedAt    DateTime?
+  errorMsg      String?
   createdAt     DateTime  @default(now())
 
   project     Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)

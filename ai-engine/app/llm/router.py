@@ -20,7 +20,11 @@ class LLMResult:
 def _route(task: str) -> tuple[str, str]:
     """Which provider and model handles which task."""
     if task == "testgen":
-        provider = settings.testgen_provider.strip().lower()
+        return settings.testgen_provider.strip().lower(), settings.ollama_model_testgen
+    if task == "script":
+        provider = settings.script_provider.strip().lower()
+        if provider == "groq" and not groq_client.configured:
+            provider = "ollama"
         return provider, settings.ollama_model_testgen
     if task == "code_fix":
         return "ollama", settings.ollama_model_code

@@ -95,3 +95,32 @@ export const PRIORITY_OPTIONS = Object.entries(PRIORITY_LABEL).map(([value, labe
   value,
   label,
 }));
+
+export const RUN_STAGES = [
+  'Requirements Analysis',
+  'Test Case Generation',
+  'Test Execution',
+  'Bug Analysis',
+  'Report Generation',
+];
+
+export const RUN_STATUS_LABEL = {
+  QUEUED: 'Queued',
+  RUNNING: 'Running',
+  COMPLETED: 'Completed',
+  FAILED: 'Failed',
+  CANCELLED: 'Cancelled',
+};
+export const RUN_STATUS_TONE = {
+  QUEUED: 'neutral',
+  RUNNING: 'info',
+  COMPLETED: 'success',
+  FAILED: 'danger',
+  CANCELLED: 'warning',
+};
+
+export const RESULT_STATUS_LABEL = { PASSED: 'Passed', FAILED: 'Failed', ERROR: 'Error', SKIPPED: 'Skipped' };
+export const RESULT_STATUS_TONE = { PASSED: 'success', FAILED: 'danger', ERROR: 'warning', SKIPPED: 'neutral' };
+
+export const HTTP_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
+export const METHOD_TONE = { GET: 'info', POST: 'success', PUT: 'warning', PATCH: 'warning', DELETE: 'danger' };

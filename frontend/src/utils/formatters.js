@@ -30,3 +30,25 @@ export const formatDate = (iso) =>
   iso
     ? new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
     : '—';
+
+export const formatDateTime = (iso) =>
+  iso
+    ? new Date(iso).toLocaleString(undefined, {
+        day: 'numeric',
+        month: 'short',
+        hour: 'numeric',
+        minute: '2-digit',
+      })
+    : '—';
+
+export const formatMs = (ms) => {
+  const n = Number(ms ?? 0);
+  return n >= 1000 ? `${(n / 1000).toFixed(1)}s` : `${n} ms`;
+};
+
+// Seconds a run has been going (or ran for)
+export function runSeconds(run, now = Date.now()) {
+  if (!run?.startedAt) return 0;
+  const end = run.finishedAt ? new Date(run.finishedAt).getTime() : now;
+  return Math.max(0, (end - new Date(run.startedAt).getTime()) / 1000);
+}

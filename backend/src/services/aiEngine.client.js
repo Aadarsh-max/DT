@@ -4,6 +4,7 @@ import { ApiError } from '../utils/ApiError.js';
 
 const INDEX_TIMEOUT_MS = 10 * 60 * 1000; // embedding on CPU can be slow
 const GENERATE_TIMEOUT_MS = 12 * 60 * 1000; // local LLM generation on CPU can be slow
+const UI_CASE_TIMEOUT_MS = 8 * 60 * 1000; // script writing + browser run
 
 function messageFrom(data, status) {
   if (typeof data?.detail === 'string') return data.detail;
@@ -35,6 +36,16 @@ async function call(path, { method = 'GET', json, form, timeoutMs = env.AI_ENGIN
   if (!res.ok) throw new ApiError(res.status >= 500 ? 502 : res.status, messageFrom(data, res.status));
   return data;
 }
+
+// Converts an engine case result to the shape the backend stores and returns
+export const fromEngine = (r) => ({
+  status: r.status,
+  durationMs: r.duration_ms ?? 0,
+  errorMessage: r.error_message ?? null,
+  logs: r.logs ?? [],
+  screenshotB64: r.screenshot_b64 ?? null,
+  response: r.response ?? null,
+});
 
 export const aiEngine = {
   async indexFile({ projectId, requirementId, filePath, filename }) {
@@ -87,6 +98,48 @@ export const aiEngine = {
       },
       timeoutMs: GENERATE_TIMEOUT_MS,
     });
+  },
+
+  // ───────── execution ─────────
+
+  preflight({ url, needBrowser }) {
+    return call('/execute/preflight', {
+      method: 'POST',
+      json: { url, need_browser: !!needBrowser },
+      timeoutMs: 2 * 60 * 1000,
+    });
+  },
+
+  async executeApiCase({ baseUrl, testData, authToken }) {
+    const data = await call('/execute/api-case', {
+      method: 'POST',
+      json: { base_url: baseUrl || null, test_data: testData ?? {}, auth_token: authToken || null },
+      timeoutMs: 60 * 1000,
+    });
+    return fromEngine(data);
+  },
+
+  async executeUiCase({ runId, testCase, baseUrl, headless }) {
+    const data = await call('/execute/ui-case', {
+      method: 'POST',
+      json: {
+        run_id: runId,
+        case_id: testCase.id,
+        title: testCase.title,
+        steps: Array.isArray(testCase.steps) ? testCase.steps : [],
+        preconditions: testCase.preconditions,
+        expected_result: testCase.expectedResult,
+        test_data: testCase.testData && typeof testCase.testData === 'object' ? testCase.testData : null,
+        base_url: baseUrl,
+        headless,
+      },
+      timeoutMs: UI_CASE_TIMEOUT_MS,
+    });
+    return fromEngine(data);
+  },
+
+  clearScreenshots(runId) {
+    return call(`/execute/screenshots/${encodeURIComponent(runId)}`, { method: 'DELETE' });
   },
 
   deleteRequirement(projectId, requirementId) {
