@@ -1,0 +1,53 @@
+name: ai-testing-infra
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: aitest_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ai_qa
+      POSTGRES_PASSWORD: ai_qa_pass
+      POSTGRES_DB: ai_qa_db
+    ports:
+      - "5434:5432"
+    volumes:
+      - aitest_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ai_qa -d ai_qa_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: aitest_redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory-policy", "noeviction"]
+    ports:
+      - "16379:6379"
+    volumes:
+      - aitest_redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Optional: start with `docker compose --profile tools up -d`
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: aitest_pgadmin
+    profiles: ["tools"]
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@local.dev
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5051:80"
+    depends_on:
+      - postgres
+
+volumes:
+  aitest_pgdata:
+  aitest_redisdata:
