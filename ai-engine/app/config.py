@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     ollama_keep_alive: str = "2m"
     testgen_provider: str = "ollama"  # "ollama" or "groq"
     script_provider: str = "ollama"  # who writes browser scripts: "ollama" or "groq"
+    duplicate_threshold: float = 0.85  # similarity needed to flag a duplicate bug
 
     groq_api_key: str = ""
     groq_model: str = "openai/gpt-oss-120b"

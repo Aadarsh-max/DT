@@ -6,8 +6,10 @@ import { prisma } from '../../config/db.js';
 import { QUEUE_NAMES } from '../../config/queue.js';
 import { redis } from '../../config/redis.js';
 import { aiEngine } from '../../services/aiEngine.client.js';
+import { createBugsForRun } from '../../services/bug.service.js';
 import { SCREENSHOT_DIR, isApiCase } from '../../services/run.service.js';
 import { logger } from '../../utils/logger.js';
+import { enqueueAnalyzeBugs } from '../producers.js';
 
 const round1 = (n) => Math.round(n * 10) / 10;
 
@@ -70,6 +72,11 @@ async function saveResult(run, tc, out) {
   });
 }
 
+async function checkTarget(url, needBrowser) {
+  const res = await aiEngine.preflight({ url, needBrowser });
+  if (!res.ok) throw new Error(res.error || `Cannot reach ${url}`);
+}
+
 async function processor(job) {
   const { runId, caseIds, uiUrl, apiBase, headless, authToken } = job.data;
 
@@ -127,10 +134,23 @@ async function processor(job) {
 
     await prisma.testRun.update({ where: { id: runId }, data: { coverage } });
     // Only a still-running run becomes COMPLETED, so a cancel is never overwritten
-    await prisma.testRun.updateMany({
+    const completed = await prisma.testRun.updateMany({
       where: { id: runId, status: 'RUNNING' },
       data: { status: 'COMPLETED', stage: 'done', progress: 100, finishedAt: new Date() },
     });
+
+    // Failed tests become bug reports, and the AI analysis is queued
+    if (completed.count) {
+      try {
+        const bugIds = await createBugsForRun(runId);
+        if (bugIds.length) {
+          await enqueueAnalyzeBugs(bugIds);
+          logger.info(`Run ${run.runCode}: ${bugIds.length} bug(s) queued for analysis`);
+        }
+      } catch (e) {
+        logger.warn(`Could not create bugs for run ${run.runCode}: ${e.message}`);
+      }
+    }
 
     return { passed: fresh.passed, failed: fresh.failed, skipped: fresh.skipped };
   } catch (e) {
@@ -142,11 +162,6 @@ async function processor(job) {
   } finally {
     aiEngine.clearScreenshots(runId).catch(() => {});
   }
-}
-
-async function checkTarget(url, needBrowser) {
-  const res = await aiEngine.preflight({ url, needBrowser });
-  if (!res.ok) throw new Error(res.error || `Cannot reach ${url}`);
 }
 
 export function startExecuteRunWorker() {

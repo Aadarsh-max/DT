@@ -1,0 +1,48 @@
+type,priority,module,title,error,steps,page_errors,severity
+SECURITY,CRITICAL,Login,SQL injection on login form is not blocked,Expected the page to show Invalid credentials but it did not,6,0,CRITICAL
+SECURITY,HIGH,Login,Login brute force lockout missing,Expected the page to show Account locked but it did not,7,0,CRITICAL
+SECURITY,HIGH,Admin Panel,Admin panel open to non admin users,Expected the URL to contain login but it is /admin,5,0,CRITICAL
+API,CRITICAL,Payment,Failed payment creates an order,Expected status 400 but got 200,4,0,CRITICAL
+API,HIGH,Checkout,Payment endpoint returns server error,Expected status 200 but got 500,3,0,CRITICAL
+API,CRITICAL,Auth,Protected endpoint works without token,Expected status 401 but got 200,3,0,CRITICAL
+FUNCTIONAL,CRITICAL,Checkout,Order total is charged incorrectly,Expected the page to show Total 5000 but it did not,8,1,CRITICAL
+SECURITY,CRITICAL,Password,Password reset link never expires,Expected the page to show Link expired but it did not,6,0,CRITICAL
+API,HIGH,Orders,Order API exposes other users data,Expected status 403 but got 200,4,0,CRITICAL
+FUNCTIONAL,HIGH,Payment,Payment submission crashes the page,Expected the page to show Order confirmed but it did not,7,3,CRITICAL
+API,CRITICAL,Auth,Login endpoint returns internal error,Got status 500 expected a 2xx response,3,0,CRITICAL
+SECURITY,HIGH,Session,Session stays active after logout,Expected the URL to contain login but it is /account,5,0,CRITICAL
+FUNCTIONAL,HIGH,Login,Valid login does not reach the dashboard,Expected the URL to contain dashboard but it is /login,5,0,HIGH
+FUNCTIONAL,HIGH,Checkout,Free shipping is not applied,Expected the page to show Free shipping but it did not,6,0,HIGH
+API,HIGH,Products,Product list returns bad gateway,Expected status 200 but got 502,2,0,HIGH
+FUNCTIONAL,HIGH,Cart,Cart total not updated after removal,Expected the page to show Total 0 but it did not,6,0,HIGH
+NEGATIVE,HIGH,Login,Invalid password is accepted,Expected the page to show Password is invalid but it did not,5,0,HIGH
+BOUNDARY,HIGH,Cart,Quantity above the maximum is accepted,Expected the page to show Maximum quantity but it did not,6,0,HIGH
+FUNCTIONAL,HIGH,Orders,Order cannot be cancelled while processing,Expected the page to show Order cancelled but it did not,6,0,HIGH
+API,HIGH,Orders,Create order rejects a valid body,Expected status 201 but got 400,3,0,HIGH
+NEGATIVE,HIGH,Payment,Unsupported payment method is accepted,Expected the page to show not supported but it did not,5,0,HIGH
+FUNCTIONAL,HIGH,Search,Search returns nothing for a valid term,Expected the page to show results but it did not,4,1,HIGH
+BOUNDARY,HIGH,Password,Password of 7 characters is accepted,Expected the page to show at least 8 but it did not,5,0,HIGH
+FUNCTIONAL,MEDIUM,Order History,Orders are not sorted newest first,Expected the page to show Most recent order but it did not,5,0,MEDIUM
+API,MEDIUM,Cart,Add to cart returns 200 instead of 201,Expected status 201 but got 200,3,0,MEDIUM
+NEGATIVE,MEDIUM,Register,Empty name is accepted,Expected the page to show Name is required but it did not,4,0,MEDIUM
+BOUNDARY,MEDIUM,Cart,Quantity zero is not rejected,Expected the page to show at least 1 but it did not,5,0,MEDIUM
+FUNCTIONAL,MEDIUM,Profile,Profile name is not saved,Expected the page to show Profile updated but it did not,5,0,MEDIUM
+API,MEDIUM,Products,Missing field returns the wrong status,Expected status 422 but got 400,3,0,MEDIUM
+FUNCTIONAL,MEDIUM,Dashboard,Stats card shows an old value,Expected the page to show 58 but it did not,4,0,MEDIUM
+NEGATIVE,MEDIUM,Login,Empty email gives no message,Expected the page to show Email is required but it did not,4,0,MEDIUM
+FUNCTIONAL,MEDIUM,Order History,Order date shown in the wrong format,Expected the page to show 19 Sep but it did not,4,0,MEDIUM
+BOUNDARY,MEDIUM,Search,Very long search term is not handled,Expected the page to show results but it did not,4,0,MEDIUM
+API,MEDIUM,Orders,List orders returns no content,Expected status 200 but got 204,2,0,MEDIUM
+FUNCTIONAL,MEDIUM,Cart,Cart is not kept after refresh,Expected the page to show 1 item but it did not,6,0,MEDIUM
+FUNCTIONAL,LOW,Footer,Footer link text differs,Expected the page to show Contact us but it did not,2,0,LOW
+FUNCTIONAL,LOW,Profile,Page title is not updated,Expected the page title to contain Profile but it did not,2,0,LOW
+NEGATIVE,LOW,Search,Unknown term shows no hint,Expected the page to show No results but it did not,3,0,LOW
+FUNCTIONAL,LOW,Home,Banner wording differs,Expected the page to show Welcome but it did not,2,0,LOW
+API,LOW,Products,Response is missing an optional field,Response body does not contain description,2,0,LOW
+BOUNDARY,LOW,Profile,Long bio is cut off oddly,Expected the page to show a truncated bio but it did not,3,0,LOW
+FUNCTIONAL,LOW,Order History,Empty state wording differs,Expected the page to show No orders yet but it did not,2,0,LOW
+FUNCTIONAL,LOW,Help,Help page heading differs,Expected the page title to contain Help but it did not,2,0,LOW
+NEGATIVE,LOW,Settings,Theme label has a typo,Expected the page to show Dark mode but it did not,2,0,LOW
+FUNCTIONAL,LOW,Home,Tooltip text differs,Expected the page to show Help but it did not,2,0,LOW
+BOUNDARY,LOW,Home,Carousel layout wraps oddly,Expected the page to show Slide 1 but it did not,3,0,LOW
+FUNCTIONAL,LOW,About,Team section wording differs,Expected the page to show Our team but it did not,3,0,LOW

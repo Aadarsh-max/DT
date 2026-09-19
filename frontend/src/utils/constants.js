@@ -124,3 +124,22 @@ export const RESULT_STATUS_TONE = { PASSED: 'success', FAILED: 'danger', ERROR: 
 
 export const HTTP_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
 export const METHOD_TONE = { GET: 'info', POST: 'success', PUT: 'warning', PATCH: 'warning', DELETE: 'danger' };
+export const SEVERITY_LABEL = { CRITICAL: 'Critical', HIGH: 'High', MEDIUM: 'Medium', LOW: 'Low' };
+export const SEVERITY_TONE = { CRITICAL: 'danger', HIGH: 'danger', MEDIUM: 'warning', LOW: 'info' };
+export const SEVERITY_OPTIONS = Object.entries(SEVERITY_LABEL).map(([value, label]) => ({ value, label }));
+
+export const BUG_STATUS_LABEL = {
+  OPEN: 'Open',
+  IN_PROGRESS: 'In progress',
+  RESOLVED: 'Resolved',
+  CLOSED: 'Closed',
+  DUPLICATE: 'Duplicate',
+};
+export const BUG_STATUS_TONE = {
+  OPEN: 'danger',
+  IN_PROGRESS: 'info',
+  RESOLVED: 'success',
+  CLOSED: 'neutral',
+  DUPLICATE: 'warning',
+};
+export const BUG_STATUS_OPTIONS = Object.entries(BUG_STATUS_LABEL).map(([value, label]) => ({ value, label }));

@@ -5,6 +5,7 @@ export const QUEUE_NAMES = {
   GENERATE_TESTS: 'generate-tests',
   EXECUTE_RUN: 'execute-run',
   ANALYZE_BUGS: 'analyze-bugs',
+  FIX_BUG: 'fix-bug',
   GENERATE_REPORT: 'generate-report',
 };
 

@@ -13,6 +13,9 @@ import TestCases from '../pages/TestCases';
 import TestExecution from '../pages/TestExecution';
 import RunDetail from '../pages/RunDetail';
 import ApiTesting from '../pages/ApiTesting';
+import BugReports from '../pages/BugReports';
+import BugDetailPage from '../pages/BugDetailPage';
+import AIAnalysis from '../pages/AIAnalysis';
 import NotFound from '../pages/NotFound';
 import EmptyState from '../components/ui/EmptyState';
 import { NAV_ITEMS } from '../utils/constants';
@@ -29,7 +32,16 @@ function ComingSoon({ title, phase }) {
   );
 }
 
-const REAL_PAGES = ['/', '/settings', '/projects', '/test-cases', '/execution', '/api-testing'];
+const REAL_PAGES = [
+  '/',
+  '/settings',
+  '/projects',
+  '/test-cases',
+  '/execution',
+  '/api-testing',
+  '/bugs',
+  '/ai-analysis',
+];
 
 export default function AppRoutes() {
   return (
@@ -49,6 +61,9 @@ export default function AppRoutes() {
           <Route path="execution" element={<TestExecution />} />
           <Route path="execution/:runId" element={<RunDetail />} />
           <Route path="api-testing" element={<ApiTesting />} />
+          <Route path="bugs" element={<BugReports />} />
+          <Route path="bugs/:bugId" element={<BugDetailPage />} />
+          <Route path="ai-analysis" element={<AIAnalysis />} />
           {NAV_ITEMS.filter((n) => !REAL_PAGES.includes(n.path)).map((n) => (
             <Route
               key={n.path}

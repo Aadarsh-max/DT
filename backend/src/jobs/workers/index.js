@@ -1,9 +1,15 @@
+import { startAnalyzeBugsWorker, startFixBugWorker } from './analyzeBugs.worker.js';
 import { startExecuteRunWorker } from './executeRun.worker.js';
 import { startGenerateTestsWorker } from './generateTests.worker.js';
 
 // Later phases add their workers to this list
 export function startWorkers() {
-  return [startGenerateTestsWorker(), startExecuteRunWorker()];
+  return [
+    startGenerateTestsWorker(),
+    startExecuteRunWorker(),
+    startAnalyzeBugsWorker(),
+    startFixBugWorker(),
+  ];
 }
 
 export async function closeWorkers(workers) {

@@ -9,6 +9,7 @@ import projectRoutes from './project.routes.js';
 import requirementRoutes from './requirement.routes.js';
 import testcaseRoutes from './testcase.routes.js';
 import runRoutes from './run.routes.js';
+import bugRoutes from './bug.routes.js';
 
 const router = Router();
 
@@ -60,6 +61,7 @@ router.use('/projects', projectRoutes);
 router.use('/', requirementRoutes);
 router.use('/', testcaseRoutes);
 router.use('/', runRoutes);
+router.use('/', bugRoutes);
 
 // More feature routers are mounted here in later phases.
 

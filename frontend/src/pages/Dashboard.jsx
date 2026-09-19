@@ -12,7 +12,7 @@ import NewRunModal from '../components/execution/NewRunModal';
 import { useAuth } from '../hooks/useAuth';
 import { useProject } from '../hooks/useProject';
 import { runService } from '../services/run.service';
-import { mockBug } from '../utils/mockData';
+import { bugService } from '../services/bug.service';
 
 const EMPTY = {
   stats: { totalCases: 0, executed: 0, executedPct: 0, passed: 0, passedPct: 0, failed: 0, failedPct: 0, bugs: 0 },
@@ -29,12 +29,22 @@ export default function Dashboard() {
   const canWrite = user?.role !== 'VIEWER';
 
   const [data, setData] = useState(EMPTY);
+  const [bug, setBug] = useState(null);
   const [open, setOpen] = useState(false);
 
   const load = useCallback(async () => {
-    if (!projectId) return setData(EMPTY);
+    if (!projectId) {
+      setData(EMPTY);
+      setBug(null);
+      return;
+    }
     try {
       setData(await runService.dashboard(projectId));
+    } catch {
+      /* keep what is on screen */
+    }
+    try {
+      setBug(await bugService.featured(projectId));
     } catch {
       /* keep what is on screen */
     }
@@ -62,7 +72,6 @@ export default function Dashboard() {
             Welcome back, {user?.name?.split(' ')[0]}! 👋
           </h1>
           <p className="text-sm text-muted">Here&apos;s an overview of your testing activity today.</p>
-          <p className="mt-1 text-xs text-muted">Bug analysis below is sample data until Phase 7.</p>
         </div>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           {projects.length > 0 ? (
@@ -96,7 +105,7 @@ export default function Dashboard() {
           <RecentRunsTable runs={data.recentRuns} />
         </div>
         <div className="space-y-4 sm:space-y-6">
-          <AIBugAnalysisCard bug={mockBug} />
+          <AIBugAnalysisCard bug={bug} />
           <ReportSummaryDonut summary={data.summary} />
         </div>
       </div>

@@ -5,6 +5,7 @@ import { ApiError } from '../utils/ApiError.js';
 const INDEX_TIMEOUT_MS = 10 * 60 * 1000; // embedding on CPU can be slow
 const GENERATE_TIMEOUT_MS = 12 * 60 * 1000; // local LLM generation on CPU can be slow
 const UI_CASE_TIMEOUT_MS = 8 * 60 * 1000; // script writing + browser run
+const FIX_TIMEOUT_MS = 12 * 60 * 1000; // the 7B code model on CPU
 
 function messageFrom(data, status) {
   if (typeof data?.detail === 'string') return data.detail;
@@ -142,6 +143,63 @@ export const aiEngine = {
     return call(`/execute/screenshots/${encodeURIComponent(runId)}`, { method: 'DELETE' });
   },
 
+  // ───────── bugs ─────────
+
+  analyzeBug(b) {
+    return call('/bugs/analyze', {
+      method: 'POST',
+      json: {
+        project_id: b.projectId,
+        title: b.title,
+        module: b.module || null,
+        test_type: b.testType,
+        priority: b.priority,
+        result_status: b.resultStatus,
+        steps: b.steps ?? [],
+        expected_result: b.expectedResult || null,
+        error_message: b.errorMessage || null,
+        logs: b.logs || null,
+        response: b.response && typeof b.response === 'object' ? b.response : null,
+      },
+      timeoutMs: 3 * 60 * 1000,
+    });
+  },
+
+  checkDuplicates({ projectId, bugId, text }) {
+    return call('/duplicates/check', {
+      method: 'POST',
+      json: { project_id: projectId, bug_id: bugId, text, index: true },
+      timeoutMs: 2 * 60 * 1000,
+    });
+  },
+
+  suggestFix({ projectId, title, module, errorMessage, explanation, requirementIds }) {
+    return call('/bugs/fix', {
+      method: 'POST',
+      json: {
+        project_id: projectId,
+        title,
+        module: module || null,
+        error_message: errorMessage || null,
+        explanation: explanation || null,
+        requirement_ids: requirementIds,
+      },
+      timeoutMs: FIX_TIMEOUT_MS,
+    });
+  },
+
+  removeBugVector(projectId, bugId) {
+    return call(`/duplicates/${encodeURIComponent(projectId)}/${encodeURIComponent(bugId)}`, {
+      method: 'DELETE',
+    });
+  },
+
+  bugEngineStatus() {
+    return call('/bugs/status', { timeoutMs: 10 * 1000 });
+  },
+
+  // ───────── cleanup ─────────
+
   deleteRequirement(projectId, requirementId) {
     return call(
       `/requirements/${encodeURIComponent(projectId)}/${encodeURIComponent(requirementId)}`,
@@ -149,7 +207,9 @@ export const aiEngine = {
     );
   },
 
-  deleteProject(projectId) {
-    return call(`/requirements/project/${encodeURIComponent(projectId)}`, { method: 'DELETE' });
+  async deleteProject(projectId) {
+    const id = encodeURIComponent(projectId);
+    await call(`/requirements/project/${id}`, { method: 'DELETE' });
+    await call(`/duplicates/project/${id}`, { method: 'DELETE' }).catch(() => {});
   },
 };
