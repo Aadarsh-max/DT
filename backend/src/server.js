@@ -9,6 +9,16 @@ async function start() {
   await prisma.$connect();
   logger.info('PostgreSQL connected');
 
+  // Indexing runs in-process, so a restart leaves rows stuck in INDEXING
+  const stuck = await prisma.requirement.updateMany({
+    where: { status: { in: ['PENDING', 'INDEXING'] } },
+    data: {
+      status: 'FAILED',
+      errorMsg: 'Indexing was interrupted by a server restart. Click Re-index.',
+    },
+  });
+  if (stuck.count) logger.warn(`Marked ${stuck.count} interrupted requirement(s) as FAILED`);
+
   const server = app.listen(env.PORT, () => {
     logger.info(`Backend running on http://localhost:${env.PORT}`);
   });

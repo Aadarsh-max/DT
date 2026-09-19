@@ -5,6 +5,8 @@ import { env } from '../config/env.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import authRoutes from './auth.routes.js';
 import userRoutes from './user.routes.js';
+import projectRoutes from './project.routes.js';
+import requirementRoutes from './requirement.routes.js';
 
 const router = Router();
 
@@ -52,6 +54,8 @@ router.get(
 
 router.use('/auth', authRoutes);
 router.use('/users', userRoutes);
+router.use('/projects', projectRoutes);
+router.use('/', requirementRoutes);
 
 // More feature routers are mounted here in later phases.
 
