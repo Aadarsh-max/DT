@@ -1,0 +1,17 @@
+﻿1. LOGIN
+Users log in with an email address and a password. The email must be a valid format. After 5 failed login attempts the account is locked for 15 minutes. A successful login redirects the user to the dashboard.
+
+2. PASSWORD RULES
+Passwords must be at least 8 characters long and contain at least one letter and one number. Passwords expire every 90 days. Users can reset a forgotten password through an emailed link that is valid for 30 minutes.
+
+3. SHOPPING CART
+Users can add up to 20 different products to the cart. The quantity of each product must be between 1 and 10. Removing a product updates the cart total immediately. The cart is saved for 7 days for logged-in users.
+
+4. CHECKOUT AND PAYMENT
+Checkout requires a shipping address and a payment method. Supported payment methods are credit card, debit card and UPI. Orders above 5000 INR qualify for free shipping. A failed payment must not create an order.
+
+5. ORDER HISTORY
+Logged-in users can view their past orders sorted by date, newest first. Each order shows its status, items, total and delivery date. Users can cancel an order only while its status is Processing.
+
+6. ADMIN PANEL
+Only users with the Admin role can access the admin panel. Admins can add, edit and delete products and can view all orders. Every admin action is written to an audit log.

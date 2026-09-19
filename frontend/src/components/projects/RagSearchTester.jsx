@@ -8,6 +8,33 @@ import { useToast } from '../ui/Toast';
 import { projectService } from '../../services/project.service';
 import { getErrorMessage } from '../../services/api';
 
+function ResultItem({ r }) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="rounded-xl border border-line p-3">
+      <div className="mb-1.5 flex items-center justify-between gap-2">
+        <p className="min-w-0 truncate text-xs font-semibold text-brand">
+          {r.source} · part {r.chunkIndex + 1}
+        </p>
+        <Badge tone={r.score >= 0.5 ? 'success' : 'warning'}>
+          {(r.score * 100).toFixed(0)}% match
+        </Badge>
+      </div>
+      <p className={`whitespace-pre-line text-sm text-muted ${open ? '' : 'line-clamp-4'}`}>
+        {r.text}
+      </p>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="mt-1.5 text-xs font-medium text-brand hover:underline"
+      >
+        {open ? 'Show less' : 'Show full text'}
+      </button>
+    </div>
+  );
+}
+
 export default function RagSearchTester({ projectId, readyCount }) {
   const toast = useToast();
   const [query, setQuery] = useState('');
@@ -62,17 +89,7 @@ export default function RagSearchTester({ projectId, readyCount }) {
             <p className="text-sm text-muted">No matching content found.</p>
           ) : (
             data.results.map((r) => (
-              <div key={`${r.requirementId}-${r.chunkIndex}`} className="rounded-xl border border-line p-3">
-                <div className="mb-1.5 flex items-center justify-between gap-2">
-                  <p className="min-w-0 truncate text-xs font-semibold text-brand">
-                    {r.source} · part {r.chunkIndex + 1}
-                  </p>
-                  <Badge tone={r.score >= 0.5 ? 'success' : 'warning'}>
-                    {(r.score * 100).toFixed(0)}% match
-                  </Badge>
-                </div>
-                <p className="line-clamp-4 whitespace-pre-line text-sm text-muted">{r.text}</p>
-              </div>
+              <ResultItem key={`${r.requirementId}-${r.chunkIndex}`} r={r} />
             ))
           )}
         </div>
