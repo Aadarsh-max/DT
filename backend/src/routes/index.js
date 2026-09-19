@@ -7,6 +7,7 @@ import authRoutes from './auth.routes.js';
 import userRoutes from './user.routes.js';
 import projectRoutes from './project.routes.js';
 import requirementRoutes from './requirement.routes.js';
+import testcaseRoutes from './testcase.routes.js';
 
 const router = Router();
 
@@ -56,6 +57,7 @@ router.use('/auth', authRoutes);
 router.use('/users', userRoutes);
 router.use('/projects', projectRoutes);
 router.use('/', requirementRoutes);
+router.use('/', testcaseRoutes);
 
 // More feature routers are mounted here in later phases.
 

@@ -9,6 +9,7 @@ import Register from '../pages/Register';
 import Settings from '../pages/Settings';
 import Projects from '../pages/Projects';
 import ProjectDetail from '../pages/ProjectDetail';
+import TestCases from '../pages/TestCases';
 import NotFound from '../pages/NotFound';
 import EmptyState from '../components/ui/EmptyState';
 import { NAV_ITEMS } from '../utils/constants';
@@ -25,7 +26,7 @@ function ComingSoon({ title, phase }) {
   );
 }
 
-const REAL_PAGES = ['/', '/settings', '/projects'];
+const REAL_PAGES = ['/', '/settings', '/projects', '/test-cases'];
 
 export default function AppRoutes() {
   return (
@@ -41,6 +42,7 @@ export default function AppRoutes() {
           <Route path="settings" element={<Settings />} />
           <Route path="projects" element={<Projects />} />
           <Route path="projects/:projectId" element={<ProjectDetail />} />
+          <Route path="test-cases" element={<TestCases />} />
           {NAV_ITEMS.filter((n) => !REAL_PAGES.includes(n.path)).map((n) => (
             <Route
               key={n.path}

@@ -3,6 +3,7 @@ import { env } from '../config/env.js';
 import { ApiError } from '../utils/ApiError.js';
 
 const INDEX_TIMEOUT_MS = 10 * 60 * 1000; // embedding on CPU can be slow
+const GENERATE_TIMEOUT_MS = 12 * 60 * 1000; // local LLM generation on CPU can be slow
 
 function messageFrom(data, status) {
   if (typeof data?.detail === 'string') return data.detail;
@@ -57,6 +58,34 @@ export const aiEngine = {
     return call('/requirements/search', {
       method: 'POST',
       json: { project_id: projectId, query, top_k: topK, requirement_ids: requirementIds },
+    });
+  },
+
+  generateTests({
+    projectId,
+    testType,
+    count,
+    platform,
+    projectName,
+    baseUrl,
+    module,
+    requirementIds,
+    avoidTitles,
+  }) {
+    return call('/testgen/generate', {
+      method: 'POST',
+      json: {
+        project_id: projectId,
+        test_type: testType,
+        count,
+        platform,
+        project_name: projectName,
+        base_url: baseUrl || null,
+        module: module || null,
+        requirement_ids: requirementIds || null,
+        avoid_titles: avoidTitles || [],
+      },
+      timeoutMs: GENERATE_TIMEOUT_MS,
     });
   },
 

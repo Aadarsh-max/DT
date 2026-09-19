@@ -3,13 +3,14 @@ import { env } from './config/env.js';
 import { prisma } from './config/db.js';
 import { redis } from './config/redis.js';
 import { closeQueues } from './config/queue.js';
+import { closeWorkers, startWorkers } from './jobs/workers/index.js';
 import { logger } from './utils/logger.js';
 
 async function start() {
   await prisma.$connect();
   logger.info('PostgreSQL connected');
 
-  // Indexing runs in-process, so a restart leaves rows stuck in INDEXING
+  // Requirement indexing runs in-process, so a restart leaves rows stuck in INDEXING
   const stuck = await prisma.requirement.updateMany({
     where: { status: { in: ['PENDING', 'INDEXING'] } },
     data: {
@@ -23,16 +24,18 @@ async function start() {
     logger.info(`Backend running on http://localhost:${env.PORT}`);
   });
 
-  // Workers are started here in later phases.
+  const workers = startWorkers();
 
   const shutdown = async (signal) => {
     logger.info(`${signal} received, shutting down...`);
     server.close(async () => {
+      await closeWorkers(workers);
       await closeQueues();
       await redis.quit();
       await prisma.$disconnect();
       process.exit(0);
     });
+    server.closeAllConnections?.(); // ends open SSE streams so shutdown isn't blocked
     setTimeout(() => process.exit(1), 10000).unref();
   };
 

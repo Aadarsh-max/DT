@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     ollama_model_embed: str = "bge-m3"
     ollama_num_ctx: int = 4096
     ollama_keep_alive: str = "2m"
+    testgen_provider: str = "ollama"  # "ollama" or "groq"
 
     groq_api_key: str = ""
     groq_model: str = "openai/gpt-oss-120b"
