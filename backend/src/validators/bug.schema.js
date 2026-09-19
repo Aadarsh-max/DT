@@ -20,5 +20,6 @@ export const updateBugSchema = z
     description: blank(z.string().trim().max(4000).nullable(), null),
     severity: z.enum(BUG_SEVERITIES),
     status: z.enum(BUG_STATUSES),
+    assigneeId: z.string().uuid().nullable(),
   })
   .partial();

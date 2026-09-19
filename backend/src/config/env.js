@@ -12,6 +12,14 @@ const schema = z.object({
   JWT_EXPIRES_IN: z.string().default('7d'),
   AI_ENGINE_URL: z.string().default('http://localhost:8002'),
   AI_ENGINE_TIMEOUT_MS: z.coerce.number().default(120000),
+
+  SMTP_HOST: z.string().default(''),
+  SMTP_PORT: z.coerce.number().default(587),
+  SMTP_SECURE: z.string().default('false'),
+  SMTP_USER: z.string().default(''),
+  SMTP_PASS: z.string().default(''),
+  SMTP_FROM: z.string().default(''),
+  ENCRYPTION_KEY: z.string().default(''),
 });
 
 const parsed = schema.safeParse(process.env);

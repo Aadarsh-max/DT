@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Bell, ChevronDown, LogOut, Menu, Moon, Search, Settings, Sun } from 'lucide-react';
+import { ChevronDown, LogOut, Menu, Moon, Search, Settings, Sun } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../hooks/useAuth';
 import { formatRole, getInitials } from '../../utils/formatters';
+import NotificationBell from './NotificationBell';
 
 function UserMenu() {
   const { user, logout } = useAuth();
@@ -107,16 +108,7 @@ export default function Topbar({ onMenu }) {
           {isDark ? <Sun className="size-5" /> : <Moon className="size-5" />}
         </button>
 
-        {/* Wired to real notifications in Phase 10 */}
-        <button
-          aria-label="Notifications"
-          className="relative rounded-xl p-2.5 text-ink hover:bg-primary-soft"
-        >
-          <Bell className="size-5" />
-          <span className="absolute right-1.5 top-1.5 grid size-4 place-items-center rounded-full bg-danger text-[10px] font-semibold text-white">
-            3
-          </span>
-        </button>
+        <NotificationBell />
 
         <UserMenu />
       </div>

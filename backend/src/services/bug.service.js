@@ -10,6 +10,7 @@ import { ApiError } from '../utils/ApiError.js';
 import { logger } from '../utils/logger.js';
 import { aiEngine } from './aiEngine.client.js';
 import { assertProjectAccess } from './project.service.js';
+import { notifyUsers, projectPeople } from './notification.service.js';
 
 export const bugCode = (n) => `BUG-${String(n).padStart(4, '0')}`;
 const withCode = (b) => ({ ...b, code: bugCode(b.number) });

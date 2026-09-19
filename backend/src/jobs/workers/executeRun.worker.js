@@ -5,6 +5,7 @@ import { Worker } from 'bullmq';
 import { prisma } from '../../config/db.js';
 import { QUEUE_NAMES } from '../../config/queue.js';
 import { redis } from '../../config/redis.js';
+import { notifyRunFinished } from '../../services/alerts.service.js';
 import { aiEngine } from '../../services/aiEngine.client.js';
 import { createBugsForRun } from '../../services/bug.service.js';
 import { SCREENSHOT_DIR, isApiCase } from '../../services/run.service.js';
@@ -93,7 +94,7 @@ async function processor(job) {
 
     const found = await prisma.testCase.findMany({ where: { id: { in: caseIds } } });
     const byId = new Map(found.map((c) => [c.id, c]));
-    const cases = caseIds.map((id) => byId.get(id)).filter(Boolean); // keeps priority order
+    const cases = caseIds.map((id) => byId.get(id)).filter(Boolean); // keeps the ranked order
     if (cases.length === 0) throw new Error('The selected test cases no longer exist');
 
     // Fail fast with a clear message instead of erroring on every case
@@ -150,6 +151,9 @@ async function processor(job) {
       } catch (e) {
         logger.warn(`Could not create bugs for run ${run.runCode}: ${e.message}`);
       }
+
+      // In-app, Slack and email alert when the run has failures
+      await notifyRunFinished(runId);
     }
 
     return { passed: fresh.passed, failed: fresh.failed, skipped: fresh.skipped };
@@ -158,6 +162,7 @@ async function processor(job) {
       where: { id: runId, status: { in: ['QUEUED', 'RUNNING'] } },
       data: { status: 'FAILED', errorMsg: String(e.message).slice(0, 500), finishedAt: new Date() },
     });
+    await notifyRunFinished(runId);
     throw e;
   } finally {
     aiEngine.clearScreenshots(runId).catch(() => {});

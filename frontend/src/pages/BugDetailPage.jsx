@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { AlertTriangle, ArrowLeft, Loader2, RefreshCw, SearchX, Trash2 } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, ExternalLink, Loader2, RefreshCw, SearchX, Trash2 } from 'lucide-react';
 import Card, { CardHeader, CardTitle } from '../components/ui/Card';
 import Badge from '../components/ui/Badge';
 import Button from '../components/ui/Button';
@@ -11,8 +11,10 @@ import { useToast } from '../components/ui/Toast';
 import SeverityBadge from '../components/bugs/SeverityBadge';
 import DuplicateBanner from '../components/bugs/DuplicateBanner';
 import BugDetail from '../components/bugs/BugDetail';
+import CommentThread from '../components/bugs/CommentThread';
 import { useAuth } from '../hooks/useAuth';
 import { bugService } from '../services/bug.service';
+import { collabService } from '../services/collab.service';
 import { getErrorMessage } from '../services/api';
 import {
   BUG_STATUS_LABEL,
@@ -21,6 +23,22 @@ import {
   SEVERITY_OPTIONS,
 } from '../utils/constants';
 import { formatDateTime } from '../utils/formatters';
+
+function JiraLink({ url, jiraKey }) {
+  if (!url?.startsWith('https://')) {
+    return <p className="text-sm font-semibold text-ink">{jiraKey}</p>;
+  }
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noreferrer"
+      className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand hover:underline"
+    >
+      {jiraKey} <ExternalLink className="size-3.5" />
+    </a>
+  );
+}
 
 export default function BugDetailPage() {
   const { bugId } = useParams();
@@ -33,6 +51,9 @@ export default function BugDetailPage() {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [busy, setBusy] = useState('');
+  const [people, setPeople] = useState([]);
+
+  const projectId = bug?.projectId;
 
   const load = useCallback(async () => {
     try {
@@ -47,6 +68,19 @@ export default function BugDetailPage() {
     setNotFound(false);
     load().finally(() => setLoading(false));
   }, [load]);
+
+  // People a bug can be assigned to: the project owner and members
+  useEffect(() => {
+    if (!projectId) return;
+    let cancelled = false;
+    collabService.team
+      .list(projectId)
+      .then((d) => !cancelled && setPeople([d.owner, ...d.members]))
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [projectId]);
 
   // Poll while an AI job is queued or running
   const running = !!bug?.activeJob;
@@ -132,6 +166,14 @@ export default function BugDetailPage() {
 
   const job = bug.activeJob;
 
+  const assigneeOptions = [
+    { value: '', label: 'Unassigned' },
+    ...people.map((p) => ({ value: p.id, label: p.name })),
+  ];
+  if (bug.assignee && !people.some((p) => p.id === bug.assignee.id)) {
+    assigneeOptions.push({ value: bug.assignee.id, label: bug.assignee.name });
+  }
+
   return (
     <div className="space-y-4 sm:space-y-6">
       <Link to="/bugs" className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-brand">
@@ -204,6 +246,7 @@ export default function BugDetailPage() {
             fixBusy={busy === 'fix'}
             onSuggestFix={() => run('fix', () => bugService.suggestFix(bugId), 'Code fix queued')}
           />
+          <CommentThread bugId={bugId} />
         </div>
 
         <div className="space-y-4 sm:space-y-6">
@@ -212,6 +255,23 @@ export default function BugDetailPage() {
               <CardTitle>Triage</CardTitle>
             </CardHeader>
             <div className="space-y-4">
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-ink">Assignee</label>
+                <Select
+                  className="h-10"
+                  options={assigneeOptions}
+                  value={bug.assigneeId ?? ''}
+                  disabled={!canWrite || busy === 'patch'}
+                  onChange={(e) => patch({ assigneeId: e.target.value || null })}
+                />
+                <p className="mt-1.5 text-xs text-muted">
+                  The project owner and team members. Add people on the{' '}
+                  <Link to="/team" className="font-medium text-brand hover:underline">
+                    Team page
+                  </Link>
+                  .
+                </p>
+              </div>
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-ink">Status</label>
                 <Select
@@ -238,6 +298,35 @@ export default function BugDetailPage() {
                 </p>
               </div>
             </div>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Jira</CardTitle>
+            </CardHeader>
+            {bug.jiraKey ? (
+              <JiraLink url={bug.jiraUrl} jiraKey={bug.jiraKey} />
+            ) : (
+              <div className="space-y-3">
+                <p className="text-sm text-muted">Not linked to a Jira issue.</p>
+                {canWrite && (
+                  <Button
+                    variant="secondary"
+                    loading={busy === 'jira'}
+                    onClick={() => run('jira', () => collabService.integrations.createJira(bugId), 'Jira issue created')}
+                  >
+                    Create Jira issue
+                  </Button>
+                )}
+                <p className="text-xs text-muted">
+                  Needs Jira connected on the{' '}
+                  <Link to="/integrations" className="font-medium text-brand hover:underline">
+                    Integrations page
+                  </Link>
+                  .
+                </p>
+              </div>
+            )}
           </Card>
 
           {bug.description && (

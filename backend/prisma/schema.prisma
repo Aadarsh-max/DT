@@ -266,6 +266,8 @@ model Bug {
   assigneeId       String?
   duplicateOfId    String?
   duplicateScore   Float?
+  jiraKey          String?
+  jiraUrl          String?
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 

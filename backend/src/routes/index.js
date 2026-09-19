@@ -14,6 +14,10 @@ import reportRoutes from './report.routes.js';
 import analyticsRoutes from './analytics.routes.js';
 import chatRoutes from './chat.routes.js';
 import insightsRoutes from './insights.routes.js';
+import commentRoutes from './comment.routes.js';
+import teamRoutes from './team.routes.js';
+import integrationRoutes from './integration.routes.js';
+import notificationRoutes from './notification.routes.js';
 
 const router = Router();
 
@@ -70,6 +74,10 @@ router.use('/', reportRoutes);
 router.use('/', analyticsRoutes);
 router.use('/', chatRoutes);
 router.use('/', insightsRoutes);
+router.use('/', commentRoutes);
+router.use('/', teamRoutes);
+router.use('/', integrationRoutes);
+router.use('/', notificationRoutes);
 
 // More feature routers are mounted here in later phases.
 
