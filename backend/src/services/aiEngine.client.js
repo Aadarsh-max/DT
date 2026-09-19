@@ -259,6 +259,32 @@ export const aiEngine = {
       pdfB64: d.pdf_b64,
     };
   },
+
+  // ───────── prioritization, risk, chat ─────────
+
+  rankCases({ projectId, cases }) {
+    return call("/prioritize/rank", {
+      method: "POST",
+      json: { project_id: projectId, cases },
+      timeoutMs: 60 * 1000,
+    });
+  },
+
+  estimateRisk(facts) {
+    return call("/risk/estimate", {
+      method: "POST",
+      json: { facts },
+      timeoutMs: 30 * 1000,
+    });
+  },
+
+  chat({ projectId, message, context, history }) {
+    return call("/chat/ask", {
+      method: "POST",
+      json: { project_id: projectId, message, context, history },
+      timeoutMs: 2 * 60 * 1000,
+    });
+  },
   // ───────── cleanup ─────────
 
   deleteRequirement(projectId, requirementId) {

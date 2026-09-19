@@ -7,6 +7,7 @@ import { enqueueExecuteRun } from '../jobs/producers.js';
 import { ApiError } from '../utils/ApiError.js';
 import { aiEngine } from './aiEngine.client.js';
 import { assertProjectAccess } from './project.service.js';
+import { rankTestCases } from './prioritize.service.js';
 
 export const SCREENSHOT_DIR = path.join(UPLOAD_DIR, 'screenshots');
 export const ACTIVE = ['QUEUED', 'RUNNING'];
@@ -47,19 +48,25 @@ export async function createRun(projectId, user, opts) {
   });
   if (active) throw ApiError.conflict('A test run is already in progress for this project');
 
-  const cases = await prisma.testCase.findMany({
+  // All matching cases are candidates, so smart ordering can pick the best ones
+  let cases = await prisma.testCase.findMany({
     where: {
       projectId,
       type: { in: opts.types },
       ...(opts.testCaseIds && { id: { in: opts.testCaseIds } }),
     },
     orderBy: [{ priority: 'desc' }, { createdAt: 'asc' }],
-    take: opts.maxCases,
-    select: { id: true, type: true, platform: true },
+    take: 500,
+    select: { id: true, type: true, platform: true, priority: true, module: true },
   });
   if (cases.length === 0) {
     throw ApiError.badRequest('No test cases match. Generate test cases first, or pick other types.');
   }
+
+  if (opts.smartOrder && cases.length > 1) {
+    cases = (await rankTestCases(projectId, cases)).ordered;
+  }
+  cases = cases.slice(0, opts.maxCases);
 
   const needsUi = cases.some((c) => !isApiCase(c));
   const needsApi = cases.some(isApiCase);
@@ -105,7 +112,6 @@ export async function createRun(projectId, user, opts) {
   }
   return run;
 }
-
 export async function listRuns(projectId, user, q) {
   await assertProjectAccess(projectId, user);
   const where = { projectId, ...(q.status && { status: q.status }) };

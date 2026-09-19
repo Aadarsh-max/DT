@@ -1,9 +1,10 @@
 import { NavLink } from 'react-router-dom';
-import { Bot, MessageSquarePlus, Sparkles } from 'lucide-react';
+import { Bot } from 'lucide-react';
 import { NAV_ITEMS } from '../../utils/constants';
 import { cn } from '../../utils/cn';
+import AIAssistantCard from './AIAssistantCard';
 
-export function SidebarContent({ onNavigate }) {
+export function SidebarContent({ onNavigate, onOpenChat }) {
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center gap-3 px-5 py-5">
@@ -38,28 +39,20 @@ export function SidebarContent({ onNavigate }) {
         ))}
       </nav>
 
-      {/* Becomes components/layout/AIAssistantCard.jsx in Phase 9 */}
-      <div className="p-3">
-        <div className="rounded-2xl border border-line bg-primary-soft/60 p-4">
-          <div className="flex items-start justify-between">
-            <p className="text-sm font-semibold text-brand">AI Assistant</p>
-            <Sparkles className="size-5 text-primary" />
-          </div>
-          <p className="mt-1 text-xs text-muted">Ask about your tests or bugs...</p>
-          <button className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-line bg-card py-2 text-sm font-medium text-brand hover:bg-primary-soft">
-            <MessageSquarePlus className="size-4" />
-            New Chat
-          </button>
-        </div>
-      </div>
+      <AIAssistantCard
+        onOpen={() => {
+          onNavigate?.();
+          onOpenChat?.();
+        }}
+      />
     </div>
   );
 }
 
-export default function Sidebar() {
+export default function Sidebar({ onOpenChat }) {
   return (
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 border-r border-line bg-card lg:block">
-      <SidebarContent />
+      <SidebarContent onOpenChat={onOpenChat} />
     </aside>
   );
 }

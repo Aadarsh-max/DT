@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { SidebarContent } from './Sidebar';
 
-export default function MobileDrawer({ open, onClose }) {
+export default function MobileDrawer({ open, onClose, onOpenChat }) {
   useEffect(() => {
     if (!open) return;
     const onKey = (e) => e.key === 'Escape' && onClose();
@@ -29,7 +29,7 @@ export default function MobileDrawer({ open, onClose }) {
         >
           <X className="size-5" />
         </button>
-        <SidebarContent onNavigate={onClose} />
+        <SidebarContent onNavigate={onClose} onOpenChat={onOpenChat} />
       </div>
     </div>,
     document.body

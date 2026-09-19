@@ -9,6 +9,7 @@ Rules:
 - Plain, professional language. No markdown and no bullet characters inside the strings.
 - executive_summary: 3 to 5 sentences.
 - key_findings: 3 to 5 short strings. risks: 0 to 4 short strings (an empty list if the facts support none). recommendations: 3 to 5 short, actionable strings.
+- When many tests ended in Error, or a target URL is given that may not match the requirements, say the most likely cause is that the tests ran against the wrong application, and recommend confirming the target URL first. Do not present failures from such a run as confirmed defects.
 - Respond with JSON only, in exactly this shape:
 {"executive_summary":"...","key_findings":["..."],"risks":["..."],"recommendations":["..."]}"""
 

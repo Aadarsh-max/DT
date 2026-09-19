@@ -12,6 +12,8 @@ import runRoutes from './run.routes.js';
 import bugRoutes from './bug.routes.js';
 import reportRoutes from './report.routes.js';
 import analyticsRoutes from './analytics.routes.js';
+import chatRoutes from './chat.routes.js';
+import insightsRoutes from './insights.routes.js';
 
 const router = Router();
 
@@ -66,6 +68,8 @@ router.use('/', runRoutes);
 router.use('/', bugRoutes);
 router.use('/', reportRoutes);
 router.use('/', analyticsRoutes);
+router.use('/', chatRoutes);
+router.use('/', insightsRoutes);
 
 // More feature routers are mounted here in later phases.
 

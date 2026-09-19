@@ -18,3 +18,6 @@ export const authLimiter = make(
 
 // General limiter, used on heavier routes in later phases
 export const apiLimiter = make(60 * 1000, 120, 'Too many requests. Slow down.');
+
+// Each chat message is a paid-tier-sized Groq call
+export const chatLimiter = make(60 * 1000, 15, 'You are sending messages too fast. Wait a moment.');

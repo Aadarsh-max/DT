@@ -87,6 +87,7 @@ export async function deleteProject(id, user) {
     select: { filePath: true },
   });
 
+  await prisma.chatMessage.deleteMany({ where: { projectId: id } });
   await prisma.project.delete({ where: { id } }); // cascades to all related rows
 
   await aiEngine

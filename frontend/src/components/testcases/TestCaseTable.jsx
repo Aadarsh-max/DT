@@ -1,4 +1,5 @@
 import Badge from '../ui/Badge';
+import ProgressBar from '../ui/ProgressBar';
 import { Table, THead, TBody, Tr, Th, Td } from '../ui/Table';
 import {
   PRIORITY_LABEL,
@@ -11,7 +12,7 @@ export default function TestCaseTable({ items, selectedIds, onToggle, onToggleAl
   const allSelected = items.length > 0 && items.every((t) => selectedIds.includes(t.id));
 
   return (
-    <Table className="min-w-[720px]">
+    <Table className="min-w-[820px]">
       <THead>
         <Tr className="hover:bg-transparent">
           <Th className="w-10">
@@ -26,6 +27,9 @@ export default function TestCaseTable({ items, selectedIds, onToggle, onToggleAl
           <Th>Test case</Th>
           <Th>Type</Th>
           <Th>Priority</Th>
+          <Th className="w-28" title="How likely this test is to catch a bug, from the last smart-ordered run">
+            Run priority
+          </Th>
           <Th>Steps</Th>
           <Th>Source</Th>
         </Tr>
@@ -62,6 +66,16 @@ export default function TestCaseTable({ items, selectedIds, onToggle, onToggleAl
             </Td>
             <Td>
               <Badge tone={PRIORITY_TONE[t.priority]}>{PRIORITY_LABEL[t.priority]}</Badge>
+            </Td>
+            <Td>
+              {t.priorityScore != null ? (
+                <div>
+                  <ProgressBar value={t.priorityScore * 100} />
+                  <p className="mt-0.5 text-center text-[10px] text-muted">{Math.round(t.priorityScore * 100)}%</p>
+                </div>
+              ) : (
+                <span className="text-muted">—</span>
+              )}
             </Td>
             <Td className="text-muted">{Array.isArray(t.steps) ? t.steps.length : 0}</Td>
             <Td>
