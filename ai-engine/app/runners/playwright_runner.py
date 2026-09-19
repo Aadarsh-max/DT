@@ -1,3 +1,4 @@
+import base64
 import asyncio
 import json
 import os
@@ -97,3 +98,9 @@ async def execute(
         },
         timeout=170,
     )
+
+async def render_pdf(html: str) -> bytes:
+    result = await _call({"mode": "pdf", "html": html}, timeout=100)
+    if not result.get("ok"):
+        raise BrowserError(result.get("error") or "PDF rendering failed")
+    return base64.b64decode(result["pdf_b64"])    

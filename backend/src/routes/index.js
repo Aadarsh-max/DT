@@ -10,6 +10,8 @@ import requirementRoutes from './requirement.routes.js';
 import testcaseRoutes from './testcase.routes.js';
 import runRoutes from './run.routes.js';
 import bugRoutes from './bug.routes.js';
+import reportRoutes from './report.routes.js';
+import analyticsRoutes from './analytics.routes.js';
 
 const router = Router();
 
@@ -62,6 +64,8 @@ router.use('/', requirementRoutes);
 router.use('/', testcaseRoutes);
 router.use('/', runRoutes);
 router.use('/', bugRoutes);
+router.use('/', reportRoutes);
+router.use('/', analyticsRoutes);
 
 // More feature routers are mounted here in later phases.
 

@@ -105,4 +105,7 @@ export async function deleteProject(id, user) {
       force: true,
     })
     .catch(() => {});
+  await fs
+    .rm(path.join(UPLOAD_DIR, "reports", id), { recursive: true, force: true })
+    .catch(() => {});
 }

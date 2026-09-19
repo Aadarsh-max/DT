@@ -1,24 +1,26 @@
-import { Routes, Route } from 'react-router-dom';
-import { Hammer } from 'lucide-react';
-import AppLayout from '../layouts/AppLayout';
-import AuthLayout from '../layouts/AuthLayout';
-import ProtectedRoute from './ProtectedRoute';
-import Dashboard from '../pages/Dashboard';
-import Login from '../pages/Login';
-import Register from '../pages/Register';
-import Settings from '../pages/Settings';
-import Projects from '../pages/Projects';
-import ProjectDetail from '../pages/ProjectDetail';
-import TestCases from '../pages/TestCases';
-import TestExecution from '../pages/TestExecution';
-import RunDetail from '../pages/RunDetail';
-import ApiTesting from '../pages/ApiTesting';
-import BugReports from '../pages/BugReports';
-import BugDetailPage from '../pages/BugDetailPage';
-import AIAnalysis from '../pages/AIAnalysis';
-import NotFound from '../pages/NotFound';
-import EmptyState from '../components/ui/EmptyState';
-import { NAV_ITEMS } from '../utils/constants';
+import { Routes, Route } from "react-router-dom";
+import { Hammer } from "lucide-react";
+import AppLayout from "../layouts/AppLayout";
+import AuthLayout from "../layouts/AuthLayout";
+import ProtectedRoute from "./ProtectedRoute";
+import Dashboard from "../pages/Dashboard";
+import Login from "../pages/Login";
+import Register from "../pages/Register";
+import Settings from "../pages/Settings";
+import Projects from "../pages/Projects";
+import ProjectDetail from "../pages/ProjectDetail";
+import TestCases from "../pages/TestCases";
+import TestExecution from "../pages/TestExecution";
+import RunDetail from "../pages/RunDetail";
+import ApiTesting from "../pages/ApiTesting";
+import BugReports from "../pages/BugReports";
+import BugDetailPage from "../pages/BugDetailPage";
+import AIAnalysis from "../pages/AIAnalysis";
+import NotFound from "../pages/NotFound";
+import EmptyState from "../components/ui/EmptyState";
+import Reports from "../pages/Reports";
+import Analytics from "../pages/Analytics";
+import { NAV_ITEMS } from "../utils/constants";
 
 function ComingSoon({ title, phase }) {
   return (
@@ -33,14 +35,16 @@ function ComingSoon({ title, phase }) {
 }
 
 const REAL_PAGES = [
-  '/',
-  '/settings',
-  '/projects',
-  '/test-cases',
-  '/execution',
-  '/api-testing',
-  '/bugs',
-  '/ai-analysis',
+  "/",
+  "/settings",
+  "/projects",
+  "/test-cases",
+  "/execution",
+  "/api-testing",
+  "/bugs",
+  "/ai-analysis",
+  "/reports",
+  "/analytics",
 ];
 
 export default function AppRoutes() {
@@ -64,6 +68,8 @@ export default function AppRoutes() {
           <Route path="bugs" element={<BugReports />} />
           <Route path="bugs/:bugId" element={<BugDetailPage />} />
           <Route path="ai-analysis" element={<AIAnalysis />} />
+          <Route path="reports" element={<Reports />} />
+          <Route path="analytics" element={<Analytics />} />
           {NAV_ITEMS.filter((n) => !REAL_PAGES.includes(n.path)).map((n) => (
             <Route
               key={n.path}

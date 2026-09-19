@@ -1,6 +1,6 @@
-import fs from 'node:fs/promises';
-import { env } from '../config/env.js';
-import { ApiError } from '../utils/ApiError.js';
+import fs from "node:fs/promises";
+import { env } from "../config/env.js";
+import { ApiError } from "../utils/ApiError.js";
 
 const INDEX_TIMEOUT_MS = 10 * 60 * 1000; // embedding on CPU can be slow
 const GENERATE_TIMEOUT_MS = 12 * 60 * 1000; // local LLM generation on CPU can be slow
@@ -8,15 +8,19 @@ const UI_CASE_TIMEOUT_MS = 8 * 60 * 1000; // script writing + browser run
 const FIX_TIMEOUT_MS = 12 * 60 * 1000; // the 7B code model on CPU
 
 function messageFrom(data, status) {
-  if (typeof data?.detail === 'string') return data.detail;
-  if (Array.isArray(data?.detail)) return data.detail.map((d) => d.msg).join('; ');
+  if (typeof data?.detail === "string") return data.detail;
+  if (Array.isArray(data?.detail))
+    return data.detail.map((d) => d.msg).join("; ");
   return `AI engine error (HTTP ${status})`;
 }
 
-async function call(path, { method = 'GET', json, form, timeoutMs = env.AI_ENGINE_TIMEOUT_MS } = {}) {
+async function call(
+  path,
+  { method = "GET", json, form, timeoutMs = env.AI_ENGINE_TIMEOUT_MS } = {},
+) {
   const options = { method, signal: AbortSignal.timeout(timeoutMs) };
   if (json !== undefined) {
-    options.headers = { 'Content-Type': 'application/json' };
+    options.headers = { "Content-Type": "application/json" };
     options.body = JSON.stringify(json);
   }
   if (form) options.body = form;
@@ -27,14 +31,18 @@ async function call(path, { method = 'GET', json, form, timeoutMs = env.AI_ENGIN
   } catch (e) {
     throw new ApiError(
       502,
-      e.name === 'TimeoutError'
-        ? 'The AI engine timed out'
-        : `AI engine is not reachable at ${env.AI_ENGINE_URL}. Is uvicorn running on port 8002?`
+      e.name === "TimeoutError"
+        ? "The AI engine timed out"
+        : `AI engine is not reachable at ${env.AI_ENGINE_URL}. Is uvicorn running on port 8002?`,
     );
   }
 
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new ApiError(res.status >= 500 ? 502 : res.status, messageFrom(data, res.status));
+  if (!res.ok)
+    throw new ApiError(
+      res.status >= 500 ? 502 : res.status,
+      messageFrom(data, res.status),
+    );
   return data;
 }
 
@@ -52,24 +60,33 @@ export const aiEngine = {
   async indexFile({ projectId, requirementId, filePath, filename }) {
     const buffer = await fs.readFile(filePath);
     const form = new FormData();
-    form.append('project_id', projectId);
-    form.append('requirement_id', requirementId);
-    form.append('file', new Blob([buffer]), filename);
-    return call('/requirements/index-file', { method: 'POST', form, timeoutMs: INDEX_TIMEOUT_MS });
+    form.append("project_id", projectId);
+    form.append("requirement_id", requirementId);
+    form.append("file", new Blob([buffer]), filename);
+    return call("/requirements/index-file", {
+      method: "POST",
+      form,
+      timeoutMs: INDEX_TIMEOUT_MS,
+    });
   },
 
   indexUrl({ projectId, requirementId, url }) {
-    return call('/requirements/index-url', {
-      method: 'POST',
+    return call("/requirements/index-url", {
+      method: "POST",
       json: { project_id: projectId, requirement_id: requirementId, url },
       timeoutMs: INDEX_TIMEOUT_MS,
     });
   },
 
   search({ projectId, query, topK = 5, requirementIds }) {
-    return call('/requirements/search', {
-      method: 'POST',
-      json: { project_id: projectId, query, top_k: topK, requirement_ids: requirementIds },
+    return call("/requirements/search", {
+      method: "POST",
+      json: {
+        project_id: projectId,
+        query,
+        top_k: topK,
+        requirement_ids: requirementIds,
+      },
     });
   },
 
@@ -84,8 +101,8 @@ export const aiEngine = {
     requirementIds,
     avoidTitles,
   }) {
-    return call('/testgen/generate', {
-      method: 'POST',
+    return call("/testgen/generate", {
+      method: "POST",
       json: {
         project_id: projectId,
         test_type: testType,
@@ -104,25 +121,29 @@ export const aiEngine = {
   // ───────── execution ─────────
 
   preflight({ url, needBrowser }) {
-    return call('/execute/preflight', {
-      method: 'POST',
+    return call("/execute/preflight", {
+      method: "POST",
       json: { url, need_browser: !!needBrowser },
       timeoutMs: 2 * 60 * 1000,
     });
   },
 
   async executeApiCase({ baseUrl, testData, authToken }) {
-    const data = await call('/execute/api-case', {
-      method: 'POST',
-      json: { base_url: baseUrl || null, test_data: testData ?? {}, auth_token: authToken || null },
+    const data = await call("/execute/api-case", {
+      method: "POST",
+      json: {
+        base_url: baseUrl || null,
+        test_data: testData ?? {},
+        auth_token: authToken || null,
+      },
       timeoutMs: 60 * 1000,
     });
     return fromEngine(data);
   },
 
   async executeUiCase({ runId, testCase, baseUrl, headless }) {
-    const data = await call('/execute/ui-case', {
-      method: 'POST',
+    const data = await call("/execute/ui-case", {
+      method: "POST",
       json: {
         run_id: runId,
         case_id: testCase.id,
@@ -130,7 +151,10 @@ export const aiEngine = {
         steps: Array.isArray(testCase.steps) ? testCase.steps : [],
         preconditions: testCase.preconditions,
         expected_result: testCase.expectedResult,
-        test_data: testCase.testData && typeof testCase.testData === 'object' ? testCase.testData : null,
+        test_data:
+          testCase.testData && typeof testCase.testData === "object"
+            ? testCase.testData
+            : null,
         base_url: baseUrl,
         headless,
       },
@@ -140,14 +164,16 @@ export const aiEngine = {
   },
 
   clearScreenshots(runId) {
-    return call(`/execute/screenshots/${encodeURIComponent(runId)}`, { method: 'DELETE' });
+    return call(`/execute/screenshots/${encodeURIComponent(runId)}`, {
+      method: "DELETE",
+    });
   },
 
   // ───────── bugs ─────────
 
   analyzeBug(b) {
-    return call('/bugs/analyze', {
-      method: 'POST',
+    return call("/bugs/analyze", {
+      method: "POST",
       json: {
         project_id: b.projectId,
         title: b.title,
@@ -159,23 +185,31 @@ export const aiEngine = {
         expected_result: b.expectedResult || null,
         error_message: b.errorMessage || null,
         logs: b.logs || null,
-        response: b.response && typeof b.response === 'object' ? b.response : null,
+        response:
+          b.response && typeof b.response === "object" ? b.response : null,
       },
       timeoutMs: 3 * 60 * 1000,
     });
   },
 
   checkDuplicates({ projectId, bugId, text }) {
-    return call('/duplicates/check', {
-      method: 'POST',
+    return call("/duplicates/check", {
+      method: "POST",
       json: { project_id: projectId, bug_id: bugId, text, index: true },
       timeoutMs: 2 * 60 * 1000,
     });
   },
 
-  suggestFix({ projectId, title, module, errorMessage, explanation, requirementIds }) {
-    return call('/bugs/fix', {
-      method: 'POST',
+  suggestFix({
+    projectId,
+    title,
+    module,
+    errorMessage,
+    explanation,
+    requirementIds,
+  }) {
+    return call("/bugs/fix", {
+      method: "POST",
       json: {
         project_id: projectId,
         title,
@@ -189,27 +223,56 @@ export const aiEngine = {
   },
 
   removeBugVector(projectId, bugId) {
-    return call(`/duplicates/${encodeURIComponent(projectId)}/${encodeURIComponent(bugId)}`, {
-      method: 'DELETE',
-    });
+    return call(
+      `/duplicates/${encodeURIComponent(projectId)}/${encodeURIComponent(bugId)}`,
+      {
+        method: "DELETE",
+      },
+    );
   },
 
   bugEngineStatus() {
-    return call('/bugs/status', { timeoutMs: 10 * 1000 });
+    return call("/bugs/status", { timeoutMs: 10 * 1000 });
   },
 
+  // ───────── reports ─────────
+
+  async generateReport({ title, facts }) {
+    const d = await call("/report/generate", {
+      method: "POST",
+      json: { title, facts },
+      timeoutMs: 5 * 60 * 1000,
+    });
+    return {
+      sections: {
+        executiveSummary: d.sections.executive_summary,
+        keyFindings: d.sections.key_findings,
+        risks: d.sections.risks,
+        recommendations: d.sections.recommendations,
+      },
+      health: d.health,
+      caveats: d.caveats,
+      aiWritten: d.ai_written,
+      provider: d.provider,
+      model: d.model,
+      warnings: d.warnings,
+      pdfB64: d.pdf_b64,
+    };
+  },
   // ───────── cleanup ─────────
 
   deleteRequirement(projectId, requirementId) {
     return call(
       `/requirements/${encodeURIComponent(projectId)}/${encodeURIComponent(requirementId)}`,
-      { method: 'DELETE' }
+      { method: "DELETE" },
     );
   },
 
   async deleteProject(projectId) {
     const id = encodeURIComponent(projectId);
-    await call(`/requirements/project/${id}`, { method: 'DELETE' });
-    await call(`/duplicates/project/${id}`, { method: 'DELETE' }).catch(() => {});
+    await call(`/requirements/project/${id}`, { method: "DELETE" });
+    await call(`/duplicates/project/${id}`, { method: "DELETE" }).catch(
+      () => {},
+    );
   },
 };

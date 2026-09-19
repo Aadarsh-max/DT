@@ -61,3 +61,8 @@ export async function getBugJobError(bugId) {
     return null;
   }
 }
+
+// The job id is the report id, so a report can always find its own job
+export function enqueueGenerateReport(data) {
+  return queues.GENERATE_REPORT.add('report', data, { jobId: data.reportId, attempts: 1 });
+}

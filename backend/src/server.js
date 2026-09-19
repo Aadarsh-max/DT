@@ -38,6 +38,19 @@ async function recoverInterruptedWork() {
       });
     }
   }
+
+  // Reports that were generating when the server stopped: fail the ones whose job is gone
+  const generating = await prisma.report.findMany({ where: { status: 'GENERATING' }, select: { id: true } });
+  for (const r of generating) {
+    const job = await queues.GENERATE_REPORT.getJob(r.id);
+    const state = job ? await job.getState() : null;
+    if (!job || ['failed', 'completed'].includes(state)) {
+      await prisma.report.update({
+        where: { id: r.id },
+        data: { status: 'FAILED', errorMsg: 'The report was interrupted. Generate it again.' },
+      });
+    }
+  }
 }
 
 async function start() {

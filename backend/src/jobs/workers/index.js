@@ -1,5 +1,6 @@
 import { startAnalyzeBugsWorker, startFixBugWorker } from './analyzeBugs.worker.js';
 import { startExecuteRunWorker } from './executeRun.worker.js';
+import { startGenerateReportWorker } from './generateReport.worker.js';
 import { startGenerateTestsWorker } from './generateTests.worker.js';
 
 // Later phases add their workers to this list
@@ -9,6 +10,7 @@ export function startWorkers() {
     startExecuteRunWorker(),
     startAnalyzeBugsWorker(),
     startFixBugWorker(),
+    startGenerateReportWorker(),
   ];
 }
 

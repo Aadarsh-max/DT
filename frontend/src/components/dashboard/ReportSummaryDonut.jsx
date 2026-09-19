@@ -1,14 +1,21 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Download, Share2 } from 'lucide-react';
 import Card, { CardHeader, CardTitle } from '../ui/Card';
 import Button from '../ui/Button';
 import { useToast } from '../ui/Toast';
+import { reportService } from '../../services/report.service';
+import { getErrorMessage } from '../../services/api';
 import { formatNumber, formatPercent } from '../../utils/formatters';
 
 const R = 70;
 const C = 2 * Math.PI * R;
 
-export default function ReportSummaryDonut({ summary }) {
+export default function ReportSummaryDonut({ summary, runId, projectId }) {
   const toast = useToast();
+  const navigate = useNavigate();
+  const [busy, setBusy] = useState('');
+
   const total = summary.passed + summary.failed + summary.skipped;
   const passRate = total ? (summary.passed / total) * 100 : 0;
 
@@ -25,6 +32,50 @@ export default function ReportSummaryDonut({ summary }) {
     offset += len;
     return arc;
   });
+
+  async function latestReport() {
+    const { items } = await reportService.list(projectId, { runId, limit: 1 });
+    return items[0] ?? null;
+  }
+
+  async function onDownload() {
+    if (!runId) return toast.info('Run your tests first');
+    setBusy('download');
+    try {
+      const existing = await latestReport();
+      if (existing?.status === 'READY') {
+        await reportService.download(existing);
+      } else if (existing?.status === 'GENERATING') {
+        navigate(`/reports?id=${existing.id}`);
+      } else {
+        const report = await reportService.create(projectId, { runId });
+        toast.info('Generating your report...');
+        navigate(`/reports?id=${report.id}`);
+      }
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'Could not create the report'));
+    } finally {
+      setBusy('');
+    }
+  }
+
+  async function onShare() {
+    if (!runId) return toast.info('Run your tests first');
+    setBusy('share');
+    try {
+      const existing = await latestReport();
+      if (!existing) {
+        toast.info('Create the report first with Download PDF Report');
+        return;
+      }
+      await navigator.clipboard.writeText(`${window.location.origin}/reports?id=${existing.id}`);
+      toast.success('Link copied. Teammates need access to this project to open it.');
+    } catch {
+      toast.error('Could not copy the link');
+    } finally {
+      setBusy('');
+    }
+  }
 
   return (
     <Card>
@@ -73,14 +124,10 @@ export default function ReportSummaryDonut({ summary }) {
       </div>
 
       <div className="mt-5 grid grid-cols-1 gap-3 min-[480px]:grid-cols-2">
-        <Button
-          variant="secondary"
-          icon={Download}
-          onClick={() => toast.info('PDF export arrives in Phase 8')}
-        >
+        <Button variant="secondary" icon={Download} loading={busy === 'download'} disabled={!runId} onClick={onDownload}>
           Download PDF Report
         </Button>
-        <Button icon={Share2} onClick={() => toast.info('Sharing arrives in Phase 8')}>
+        <Button icon={Share2} loading={busy === 'share'} disabled={!runId} onClick={onShare}>
           Share Report
         </Button>
       </div>

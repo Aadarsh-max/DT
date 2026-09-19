@@ -302,12 +302,16 @@ model Report {
   title     String
   summary   String?
   filePath  String?
+  status    String   @default("GENERATING")
+  errorMsg  String?
+  content   Json?
   createdAt DateTime @default(now())
 
   project Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   run     TestRun? @relation(fields: [runId], references: [id], onDelete: SetNull)
 
   @@index([projectId])
+  @@index([runId])
 }
 
 model Integration {

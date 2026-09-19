@@ -143,3 +143,21 @@ export const BUG_STATUS_TONE = {
   DUPLICATE: 'warning',
 };
 export const BUG_STATUS_OPTIONS = Object.entries(BUG_STATUS_LABEL).map(([value, label]) => ({ value, label }));
+
+export const REPORT_STATUS_LABEL = { GENERATING: 'Generating', READY: 'Ready', FAILED: 'Failed' };
+export const REPORT_STATUS_TONE = { GENERATING: 'info', READY: 'success', FAILED: 'danger' };
+
+export const HEALTH_TONE = {
+  healthy: 'success',
+  attention: 'warning',
+  risk: 'danger',
+  inconclusive: 'neutral',
+  nodata: 'neutral',
+};
+
+export const ANALYTICS_RANGES = [
+  { value: '7', label: 'Last 7 days' },
+  { value: '30', label: 'Last 30 days' },
+  { value: '90', label: 'Last 90 days' },
+  { value: '', label: 'All time' },
+];

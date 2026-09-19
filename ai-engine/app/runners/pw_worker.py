@@ -8,6 +8,7 @@ Protocol: one JSON object on stdin, one line "@@RESULT@@{json}" on stdout.
 Do not import anything from `app` here, so startup stays fast.
 """
 import asyncio
+import base64
 import json
 import re
 import sys
@@ -441,8 +442,37 @@ async def do_execute(p):
     }
 
 
-MODES = {"check": do_check, "snapshot": do_snapshot, "execute": do_execute}
-
+async def do_pdf(p):
+    ap = _import_playwright()
+    if ap is None:
+        return NO_PLAYWRIGHT
+    async with ap() as pw:
+        try:
+            browser = await pw.chromium.launch(headless=True)
+        except Exception as e:  # noqa: BLE001
+            return _launch_failure(e)
+        try:
+            page = await browser.new_page()
+            await page.set_content(p["html"], wait_until="load")
+            footer = (
+                '<div style="width:100%;font-size:8px;color:#9ca3af;text-align:center;">'
+                'AI Testing Engineer &middot; Page <span class="pageNumber"></span> of '
+                '<span class="totalPages"></span></div>'
+            )
+            data = await page.pdf(
+                format="A4",
+                print_background=True,
+                display_header_footer=True,
+                header_template="<span></span>",
+                footer_template=footer,
+                margin={"top": "12mm", "bottom": "16mm", "left": "12mm", "right": "12mm"},
+            )
+            return {"ok": True, "pdf_b64": base64.b64encode(data).decode("ascii")}
+        except Exception as e:  # noqa: BLE001
+            return {"ok": False, "code": "PDF_FAILED", "error": f"Could not render the PDF: {_short(e)}"}
+        finally:
+            await browser.close()
+MODES = {"check": do_check, "snapshot": do_snapshot, "execute": do_execute, "pdf": do_pdf}
 
 def main():
     try:
