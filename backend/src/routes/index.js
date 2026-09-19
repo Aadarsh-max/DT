@@ -3,6 +3,8 @@ import { prisma } from '../config/db.js';
 import { redis } from '../config/redis.js';
 import { env } from '../config/env.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
+import authRoutes from './auth.routes.js';
+import userRoutes from './user.routes.js';
 
 const router = Router();
 
@@ -48,6 +50,9 @@ router.get(
   })
 );
 
-// Feature routers are mounted here in later phases.
+router.use('/auth', authRoutes);
+router.use('/users', userRoutes);
+
+// More feature routers are mounted here in later phases.
 
 export default router;

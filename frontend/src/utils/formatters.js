@@ -9,3 +9,19 @@ export function formatDuration(totalSeconds) {
   const sec = String(s % 60).padStart(2, '0');
   return `${h}:${m}:${sec}`;
 }
+
+export function formatRole(role) {
+  const map = { ADMIN: 'Admin', QA_ENGINEER: 'QA Engineer', DEVELOPER: 'Developer', VIEWER: 'Viewer' };
+  return map[role] || role;
+}
+
+export function getInitials(name = '') {
+  return (
+    name
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((p) => p[0]?.toUpperCase())
+      .join('') || '?'
+  );
+}
