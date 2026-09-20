@@ -1,41 +1,46 @@
-import fs from 'node:fs/promises';
-import path from 'node:path';
-import { prisma } from '../config/db.js';
-import { queues } from '../config/queue.js';
-import { UPLOAD_DIR } from '../middleware/upload.middleware.js';
-import { enqueueExecuteRun } from '../jobs/producers.js';
-import { ApiError } from '../utils/ApiError.js';
-import { aiEngine } from './aiEngine.client.js';
-import { assertProjectAccess } from './project.service.js';
-import { rankTestCases } from './prioritize.service.js';
+import fs from "node:fs/promises";
+import path from "node:path";
+import { prisma } from "../config/db.js";
+import { queues } from "../config/queue.js";
+import { UPLOAD_DIR } from "../middleware/upload.middleware.js";
+import { enqueueExecuteRun } from "../jobs/producers.js";
+import { ApiError } from "../utils/ApiError.js";
+import { aiEngine } from "./aiEngine.client.js";
+import { assertProjectAccess } from "./project.service.js";
+import { rankTestCases } from "./prioritize.service.js";
 
-export const SCREENSHOT_DIR = path.join(UPLOAD_DIR, 'screenshots');
-export const ACTIVE = ['QUEUED', 'RUNNING'];
-export const isApiCase = (tc) => tc.type === 'API' || tc.platform === 'API';
+export const SCREENSHOT_DIR = path.join(UPLOAD_DIR, "screenshots");
+export const ACTIVE = ["QUEUED", "RUNNING"];
+export const isApiCase = (tc) => tc.type === "API" || tc.platform === "API";
 
 const round1 = (n) => Math.round(n * 10) / 10;
 const pct = (a, b) => (b ? round1((a / b) * 100) : 0);
 
 async function getRunOrThrow(id, user) {
   const run = await prisma.testRun.findUnique({ where: { id } });
-  if (!run) throw ApiError.notFound('Test run not found');
+  if (!run) throw ApiError.notFound("Test run not found");
   await assertProjectAccess(run.projectId, user);
   return run;
 }
 
-async function nextRunCode() {
+export async function nextRunCode() {
   const prefix = `TR-${new Date().getFullYear()}-`;
   const last = await prisma.testRun.findFirst({
     where: { runCode: { startsWith: prefix } },
-    orderBy: { runCode: 'desc' },
+    orderBy: { runCode: "desc" },
     select: { runCode: true },
   });
   const n = last ? parseInt(last.runCode.slice(prefix.length), 10) + 1 : 1;
-  return prefix + String(n).padStart(4, '0');
+  return prefix + String(n).padStart(4, "0");
 }
 
 export const removeRunFiles = (projectId, runId) =>
-  fs.rm(path.join(SCREENSHOT_DIR, projectId, runId), { recursive: true, force: true }).catch(() => {});
+  fs
+    .rm(path.join(SCREENSHOT_DIR, projectId, runId), {
+      recursive: true,
+      force: true,
+    })
+    .catch(() => {});
 
 // ───────── create / list / read ─────────
 
@@ -46,7 +51,10 @@ export async function createRun(projectId, user, opts) {
     where: { projectId, status: { in: ACTIVE } },
     select: { id: true },
   });
-  if (active) throw ApiError.conflict('A test run is already in progress for this project');
+  if (active)
+    throw ApiError.conflict(
+      "A test run is already in progress for this project",
+    );
 
   // All matching cases are candidates, so smart ordering can pick the best ones
   let cases = await prisma.testCase.findMany({
@@ -55,12 +63,20 @@ export async function createRun(projectId, user, opts) {
       type: { in: opts.types },
       ...(opts.testCaseIds && { id: { in: opts.testCaseIds } }),
     },
-    orderBy: [{ priority: 'desc' }, { createdAt: 'asc' }],
+    orderBy: [{ priority: "desc" }, { createdAt: "asc" }],
     take: 500,
-    select: { id: true, type: true, platform: true, priority: true, module: true },
+    select: {
+      id: true,
+      type: true,
+      platform: true,
+      priority: true,
+      module: true,
+    },
   });
   if (cases.length === 0) {
-    throw ApiError.badRequest('No test cases match. Generate test cases first, or pick other types.');
+    throw ApiError.badRequest(
+      "No test cases match. Generate test cases first, or pick other types.",
+    );
   }
 
   if (opts.smartOrder && cases.length > 1) {
@@ -72,8 +88,10 @@ export async function createRun(projectId, user, opts) {
   const needsApi = cases.some(isApiCase);
   const uiUrl = opts.targetUrl || project.baseUrl || null;
   const apiBase = opts.apiBaseUrl || opts.targetUrl || project.baseUrl || null;
-  if (needsUi && !uiUrl) throw ApiError.badRequest('Enter the application URL for UI tests');
-  if (needsApi && !apiBase) throw ApiError.badRequest('Enter an API base URL for API tests');
+  if (needsUi && !uiUrl)
+    throw ApiError.badRequest("Enter the application URL for UI tests");
+  if (needsApi && !apiBase)
+    throw ApiError.badRequest("Enter an API base URL for API tests");
 
   let run;
   for (let attempt = 0; attempt < 3 && !run; attempt++) {
@@ -83,14 +101,14 @@ export async function createRun(projectId, user, opts) {
           runCode: await nextRunCode(),
           projectId,
           triggeredById: user.id,
-          status: 'QUEUED',
-          stage: 'queued',
+          status: "QUEUED",
+          stage: "queued",
           targetUrl: needsUi ? uiUrl : apiBase,
           total: cases.length,
         },
       });
     } catch (e) {
-      if (e?.code !== 'P2002' || attempt === 2) throw e; // run code collision: retry
+      if (e?.code !== "P2002" || attempt === 2) throw e; // run code collision: retry
     }
   }
 
@@ -106,7 +124,11 @@ export async function createRun(projectId, user, opts) {
   } catch (e) {
     await prisma.testRun.update({
       where: { id: run.id },
-      data: { status: 'FAILED', errorMsg: 'Could not queue the run. Is Redis running?', finishedAt: new Date() },
+      data: {
+        status: "FAILED",
+        errorMsg: "Could not queue the run. Is Redis running?",
+        finishedAt: new Date(),
+      },
     });
     throw e;
   }
@@ -118,7 +140,7 @@ export async function listRuns(projectId, user, q) {
   const [items, total] = await Promise.all([
     prisma.testRun.findMany({
       where,
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       skip: (q.page - 1) * q.limit,
       take: q.limit,
       include: { triggeredBy: { select: { name: true } } },
@@ -131,9 +153,19 @@ export async function listRuns(projectId, user, q) {
 export async function getRun(id, user) {
   const run = await getRunOrThrow(id, user);
   const [groups, project, triggeredBy] = await Promise.all([
-    prisma.testResult.groupBy({ by: ['status'], where: { runId: id }, _count: { _all: true } }),
-    prisma.project.findUnique({ where: { id: run.projectId }, select: { id: true, name: true } }),
-    prisma.user.findUnique({ where: { id: run.triggeredById }, select: { name: true } }),
+    prisma.testResult.groupBy({
+      by: ["status"],
+      where: { runId: id },
+      _count: { _all: true },
+    }),
+    prisma.project.findUnique({
+      where: { id: run.projectId },
+      select: { id: true, name: true },
+    }),
+    prisma.user.findUnique({
+      where: { id: run.triggeredById },
+      select: { name: true },
+    }),
   ]);
   return {
     ...run,
@@ -149,7 +181,7 @@ export async function listResults(runId, user, q) {
   const [items, total] = await Promise.all([
     prisma.testResult.findMany({
       where,
-      orderBy: { createdAt: 'asc' },
+      orderBy: { createdAt: "asc" },
       skip: (q.page - 1) * q.limit,
       take: q.limit,
       select: {
@@ -159,7 +191,16 @@ export async function listResults(runId, user, q) {
         errorMessage: true,
         screenshotPath: true,
         createdAt: true,
-        testCase: { select: { id: true, title: true, type: true, module: true, priority: true, platform: true } },
+        testCase: {
+          select: {
+            id: true,
+            title: true,
+            type: true,
+            module: true,
+            priority: true,
+            platform: true,
+          },
+        },
       },
     }),
     prisma.testResult.count({ where }),
@@ -170,22 +211,27 @@ export async function listResults(runId, user, q) {
 export async function getResult(id, user) {
   const result = await prisma.testResult.findUnique({
     where: { id },
-    include: { testCase: true, run: { select: { id: true, runCode: true, projectId: true } } },
+    include: {
+      testCase: true,
+      run: { select: { id: true, runCode: true, projectId: true } },
+    },
   });
-  if (!result) throw ApiError.notFound('Result not found');
+  if (!result) throw ApiError.notFound("Result not found");
   await assertProjectAccess(result.run.projectId, user);
   return result;
 }
 
 export async function getResultScreenshotFile(id, user) {
   const result = await getResult(id, user);
-  if (!result.screenshotPath) throw ApiError.notFound('No screenshot for this result');
+  if (!result.screenshotPath)
+    throw ApiError.notFound("No screenshot for this result");
 
   const root = path.resolve(SCREENSHOT_DIR);
   const abs = path.resolve(root, result.screenshotPath);
-  if (!abs.startsWith(root + path.sep)) throw ApiError.notFound('Invalid screenshot path');
+  if (!abs.startsWith(root + path.sep))
+    throw ApiError.notFound("Invalid screenshot path");
   await fs.access(abs).catch(() => {
-    throw ApiError.notFound('The screenshot file is missing');
+    throw ApiError.notFound("The screenshot file is missing");
   });
   return abs;
 }
@@ -194,13 +240,14 @@ export async function getResultScreenshotFile(id, user) {
 
 export async function cancelRun(id, user) {
   const run = await getRunOrThrow(id, user);
-  if (!ACTIVE.includes(run.status)) throw ApiError.conflict('This run has already finished');
+  if (!ACTIVE.includes(run.status))
+    throw ApiError.conflict("This run has already finished");
 
   const updated = await prisma.testRun.update({
     where: { id },
-    data: { status: 'CANCELLED', finishedAt: new Date() },
+    data: { status: "CANCELLED", finishedAt: new Date() },
   });
-  if (run.status === 'QUEUED') {
+  if (run.status === "QUEUED") {
     const job = await queues.EXECUTE_RUN.getJob(id);
     await job?.remove().catch(() => {});
   }
@@ -209,7 +256,8 @@ export async function cancelRun(id, user) {
 
 export async function deleteRun(id, user) {
   const run = await getRunOrThrow(id, user);
-  if (ACTIVE.includes(run.status)) throw ApiError.conflict('Cancel the run before deleting it');
+  if (ACTIVE.includes(run.status))
+    throw ApiError.conflict("Cancel the run before deleting it");
   await prisma.testRun.delete({ where: { id } });
   await removeRunFiles(run.projectId, id);
 }
@@ -217,24 +265,25 @@ export async function deleteRun(id, user) {
 // ───────── live snapshot (SSE and polling) ─────────
 
 const STATE = {
-  QUEUED: 'queued',
-  RUNNING: 'running',
-  COMPLETED: 'completed',
-  FAILED: 'failed',
-  CANCELLED: 'failed',
+  QUEUED: "queued",
+  RUNNING: "running",
+  COMPLETED: "completed",
+  FAILED: "failed",
+  CANCELLED: "failed",
 };
 
 function toSnapshot(run, jobProgress, recent) {
   const done = run.passed + run.failed + run.skipped;
-  const finished = ['COMPLETED', 'FAILED', 'CANCELLED'].includes(run.status);
+  const finished = ["COMPLETED", "FAILED", "CANCELLED"].includes(run.status);
 
   let message;
-  if (run.status === 'QUEUED') message = 'Waiting for the worker...';
-  else if (run.status === 'RUNNING') message = jobProgress?.message || 'Running tests';
-  else if (run.status === 'COMPLETED') {
+  if (run.status === "QUEUED") message = "Waiting for the worker...";
+  else if (run.status === "RUNNING")
+    message = jobProgress?.message || "Running tests";
+  else if (run.status === "COMPLETED") {
     message = `Finished: ${run.passed} passed, ${run.failed} failed, ${run.skipped} skipped`;
-  } else if (run.status === 'CANCELLED') message = 'Run was cancelled';
-  else message = run.errorMsg || 'Run failed';
+  } else if (run.status === "CANCELLED") message = "Run was cancelled";
+  else message = run.errorMsg || "Run failed";
 
   return {
     jobId: run.id,
@@ -243,7 +292,7 @@ function toSnapshot(run, jobProgress, recent) {
     status: run.status,
     state: STATE[run.status],
     progress: {
-      percent: run.status === 'COMPLETED' ? 100 : run.progress,
+      percent: run.status === "COMPLETED" ? 100 : run.progress,
       stage: run.stage,
       message,
       total: run.total,
@@ -262,20 +311,31 @@ function toSnapshot(run, jobProgress, recent) {
       title: r.testCase.title,
       type: r.testCase.type,
     })),
-    result: finished ? { runCode: run.runCode, passed: run.passed, failed: run.failed, skipped: run.skipped } : null,
+    result: finished
+      ? {
+          runCode: run.runCode,
+          passed: run.passed,
+          failed: run.failed,
+          skipped: run.skipped,
+        }
+      : null,
     error:
-      run.status === 'FAILED' ? run.errorMsg || 'Run failed' : run.status === 'CANCELLED' ? 'Run was cancelled' : null,
+      run.status === "FAILED"
+        ? run.errorMsg || "Run failed"
+        : run.status === "CANCELLED"
+          ? "Run was cancelled"
+          : null,
   };
 }
 
 export async function readRunSnapshot(runId) {
   const run = await prisma.testRun.findUnique({ where: { id: runId } });
-  if (!run) throw ApiError.notFound('Test run not found');
+  if (!run) throw ApiError.notFound("Test run not found");
 
   const [recent, job] = await Promise.all([
     prisma.testResult.findMany({
       where: { runId },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       take: 12,
       select: {
         id: true,
@@ -289,7 +349,8 @@ export async function readRunSnapshot(runId) {
     ACTIVE.includes(run.status) ? queues.EXECUTE_RUN.getJob(runId) : null,
   ]);
 
-  const jobProgress = job && typeof job.progress === 'object' ? job.progress : null;
+  const jobProgress =
+    job && typeof job.progress === "object" ? job.progress : null;
   return toSnapshot(run, jobProgress, recent);
 }
 
@@ -304,10 +365,10 @@ export async function dashboardData(projectId, user) {
   await assertProjectAccess(projectId, user);
 
   const [totalCases, runs] = await Promise.all([
-    prisma.testCase.count({ where: { projectId, NOT: { type: 'MOBILE' } } }),
+    prisma.testCase.count({ where: { projectId, NOT: { type: "MOBILE" } } }),
     prisma.testRun.findMany({
       where: { projectId },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       take: 5,
       include: { project: { select: { name: true } } },
     }),
@@ -321,7 +382,10 @@ export async function dashboardData(projectId, user) {
     const [results, bugCount] = await Promise.all([
       prisma.testResult.findMany({
         where: { runId: latest.id },
-        select: { status: true, testCase: { select: { type: true, platform: true, module: true } } },
+        select: {
+          status: true,
+          testCase: { select: { type: true, platform: true, module: true } },
+        },
       }),
       prisma.bug.count({ where: { runId: latest.id } }),
     ]);
@@ -333,7 +397,7 @@ export async function dashboardData(projectId, user) {
     for (const r of results) {
       const bucket = isApiCase(r.testCase) ? api : ui;
       bucket.total += 1;
-      if (r.status === 'PASSED') bucket.passed += 1;
+      if (r.status === "PASSED") bucket.passed += 1;
       if (r.testCase.module) modules.add(r.testCase.module);
     }
 
@@ -367,7 +431,11 @@ export async function dashboardData(projectId, user) {
       bugs,
     },
     latestRun,
-    summary: { passed: latest?.passed ?? 0, failed: latest?.failed ?? 0, skipped: latest?.skipped ?? 0 },
+    summary: {
+      passed: latest?.passed ?? 0,
+      failed: latest?.failed ?? 0,
+      skipped: latest?.skipped ?? 0,
+    },
     recentRuns: runs.map((r) => ({
       id: r.id,
       runCode: r.runCode,

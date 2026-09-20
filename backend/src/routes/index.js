@@ -18,6 +18,7 @@ import commentRoutes from './comment.routes.js';
 import teamRoutes from './team.routes.js';
 import integrationRoutes from './integration.routes.js';
 import notificationRoutes from './notification.routes.js';
+import mobileRoutes from './mobile.routes.js';
 
 const router = Router();
 
@@ -78,6 +79,7 @@ router.use('/', commentRoutes);
 router.use('/', teamRoutes);
 router.use('/', integrationRoutes);
 router.use('/', notificationRoutes);
+router.use('/', mobileRoutes);
 
 // More feature routers are mounted here in later phases.
 

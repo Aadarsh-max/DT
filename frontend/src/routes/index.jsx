@@ -16,12 +16,13 @@ import ApiTesting from "../pages/ApiTesting";
 import BugReports from "../pages/BugReports";
 import BugDetailPage from "../pages/BugDetailPage";
 import AIAnalysis from "../pages/AIAnalysis";
-import NotFound from "../pages/NotFound";
-import EmptyState from "../components/ui/EmptyState";
 import Reports from "../pages/Reports";
 import Analytics from "../pages/Analytics";
 import Team from "../pages/Team";
 import Integrations from "../pages/Integrations";
+import MobileTesting from "../pages/MobileTesting";
+import NotFound from "../pages/NotFound";
+import EmptyState from "../components/ui/EmptyState";
 import { NAV_ITEMS } from "../utils/constants";
 
 function ComingSoon({ title, phase }) {
@@ -49,6 +50,7 @@ const REAL_PAGES = [
   "/analytics",
   "/team",
   "/integrations",
+  "/mobile",
 ];
 
 export default function AppRoutes() {
@@ -76,6 +78,7 @@ export default function AppRoutes() {
           <Route path="analytics" element={<Analytics />} />
           <Route path="team" element={<Team />} />
           <Route path="integrations" element={<Integrations />} />
+          <Route path="mobile" element={<MobileTesting />} />
           {NAV_ITEMS.filter((n) => !REAL_PAGES.includes(n.path)).map((n) => (
             <Route
               key={n.path}

@@ -6,6 +6,7 @@ from app.api.routes import (
     duplicates,
     execute,
     health,
+    mobile,
     prioritize,
     report,
     requirements,
@@ -24,5 +25,4 @@ api_router.include_router(report.router)
 api_router.include_router(prioritize.router)
 api_router.include_router(risk.router)
 api_router.include_router(chat.router)
-
-# Feature routers are added here in later phases.
+api_router.include_router(mobile.router)

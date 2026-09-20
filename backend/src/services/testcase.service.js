@@ -102,7 +102,7 @@ export async function saveGeneratedTestCases({ project, type, requirementId, cas
   });
   const seen = new Set(existing.map((t) => norm(t.title)));
 
-  const platform = type === 'API' ? 'API' : project.platform;
+  const platform = type === 'API' ? 'API' : type === 'MOBILE' ? 'MOBILE' : project.platform;
   const rows = [];
   for (const c of cases) {
     const key = norm(c.title);

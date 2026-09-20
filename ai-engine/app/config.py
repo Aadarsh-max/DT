@@ -18,6 +18,8 @@ class Settings(BaseSettings):
     testgen_provider: str = "ollama"  # "ollama" or "groq"
     script_provider: str = "ollama"  # who writes browser scripts: "ollama" or "groq"
     duplicate_threshold: float = 0.85  # similarity needed to flag a duplicate bug
+    appium_url: str = "http://127.0.0.1:4723"
+    android_home: str = ""  # also read from the ANDROID_HOME environment variable
 
     groq_api_key: str = ""
     groq_model: str = "openai/gpt-oss-120b"

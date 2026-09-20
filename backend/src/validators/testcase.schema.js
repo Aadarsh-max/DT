@@ -8,7 +8,7 @@ const emptyTo = (replacement, schema) =>
   z.preprocess((v) => (typeof v === 'string' && v.trim() === '' ? replacement : v), schema);
 
 export const generateSchema = z.object({
-  types: z.array(z.enum(GENERATABLE_TYPES)).min(1, 'Pick at least one test type').default([...GENERATABLE_TYPES]),
+  types: z.array(z.enum([...GENERATABLE_TYPES, 'MOBILE'])).min(1, 'Pick at least one test type').default([...GENERATABLE_TYPES]),
   perType: z.coerce.number().int().min(1).max(8).default(3),
   module: emptyTo(undefined, z.string().trim().max(100).optional()),
   requirementIds: z.array(z.string().uuid()).min(1).optional(),

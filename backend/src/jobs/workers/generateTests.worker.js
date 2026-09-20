@@ -12,6 +12,7 @@ const LABEL = {
   NEGATIVE: 'negative',
   SECURITY: 'security',
   API: 'API',
+  MOBILE: 'mobile',
 };
 
 async function processor(job) {
@@ -43,7 +44,7 @@ async function processor(job) {
         projectId,
         testType: type,
         count: perType,
-        platform: type === 'API' ? 'API' : project.platform,
+        platform: type === 'API' ? 'API' : type === 'MOBILE' ? 'MOBILE' : project.platform,
         projectName: project.name,
         baseUrl: project.baseUrl,
         module,

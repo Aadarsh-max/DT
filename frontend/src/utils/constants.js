@@ -5,159 +5,239 @@ import {
   PlayCircle,
   Bug,
   Cog,
+  Smartphone,
   Sparkles,
   FileText,
   BarChart3,
   Settings,
   Users,
   Puzzle,
-} from 'lucide-react';
+} from "lucide-react";
 
 // phase = the build phase where that page becomes real
 export const NAV_ITEMS = [
-  { label: 'Dashboard', path: '/', icon: LayoutDashboard, phase: 2 },
-  { label: 'Projects', path: '/projects', icon: FolderKanban, phase: 4 },
-  { label: 'Test Cases', path: '/test-cases', icon: ClipboardList, phase: 5 },
-  { label: 'Test Execution', path: '/execution', icon: PlayCircle, phase: 6 },
-  { label: 'Bug Reports', path: '/bugs', icon: Bug, phase: 7 },
-  { label: 'API Testing', path: '/api-testing', icon: Cog, phase: 6 },
-  { label: 'AI Analysis', path: '/ai-analysis', icon: Sparkles, phase: 7 },
-  { label: 'Reports', path: '/reports', icon: FileText, phase: 8 },
-  { label: 'Analytics', path: '/analytics', icon: BarChart3, phase: 8 },
-  { label: 'Settings', path: '/settings', icon: Settings, phase: 3 },
-  { label: 'Team', path: '/team', icon: Users, phase: 10 },
-  { label: 'Integrations', path: '/integrations', icon: Puzzle, phase: 10 },
+  { label: "Dashboard", path: "/", icon: LayoutDashboard, phase: 2 },
+  { label: "Projects", path: "/projects", icon: FolderKanban, phase: 4 },
+  { label: "Test Cases", path: "/test-cases", icon: ClipboardList, phase: 5 },
+  { label: "Test Execution", path: "/execution", icon: PlayCircle, phase: 6 },
+  { label: "Bug Reports", path: "/bugs", icon: Bug, phase: 7 },
+  { label: "API Testing", path: "/api-testing", icon: Cog, phase: 6 },
+  { label: "Mobile Testing", path: "/mobile", icon: Smartphone, phase: 11 },
+  { label: "AI Analysis", path: "/ai-analysis", icon: Sparkles, phase: 7 },
+  { label: "Reports", path: "/reports", icon: FileText, phase: 8 },
+  { label: "Analytics", path: "/analytics", icon: BarChart3, phase: 8 },
+  { label: "Settings", path: "/settings", icon: Settings, phase: 3 },
+  { label: "Team", path: "/team", icon: Users, phase: 10 },
+  { label: "Integrations", path: "/integrations", icon: Puzzle, phase: 10 },
 ];
 
 export const PLATFORM_OPTIONS = [
-  { value: 'WEB', label: 'Web application' },
-  { value: 'API', label: 'API / backend service' },
-  { value: 'MOBILE', label: 'Mobile app (Android)' },
+  { value: "WEB", label: "Web application" },
+  { value: "API", label: "API / backend service" },
+  { value: "MOBILE", label: "Mobile app (Android)" },
 ];
 
-export const PLATFORM_LABEL = { WEB: 'Web', API: 'API', MOBILE: 'Mobile' };
+export const PLATFORM_LABEL = { WEB: "Web", API: "API", MOBILE: "Mobile" };
 
 export const REQUIREMENT_TYPE_LABEL = {
-  DOCUMENT: 'Document',
-  URL: 'URL',
-  CODE: 'Source code',
-  API_SPEC: 'API spec',
+  DOCUMENT: "Document",
+  URL: "URL",
+  CODE: "Source code",
+  API_SPEC: "API spec",
 };
 
 export const REQUIREMENT_TYPE_OPTIONS = [
-  { value: '', label: 'Auto-detect' },
-  { value: 'DOCUMENT', label: 'Document (SRS, PRD)' },
-  { value: 'API_SPEC', label: 'API spec' },
-  { value: 'CODE', label: 'Source code' },
+  { value: "", label: "Auto-detect" },
+  { value: "DOCUMENT", label: "Document (SRS, PRD)" },
+  { value: "API_SPEC", label: "API spec" },
+  { value: "CODE", label: "Source code" },
 ];
 
 // Keep in sync with backend upload.middleware.js and ai-engine loader.py
 export const UPLOAD_ACCEPT =
-  '.pdf,.docx,.txt,.md,.csv,.json,.yaml,.yml,.xml,.html,.htm,.js,.jsx,.ts,.tsx,.py,.java,.go,.rb,.php,.cs';
+  ".pdf,.docx,.txt,.md,.csv,.json,.yaml,.yml,.xml,.html,.htm,.js,.jsx,.ts,.tsx,.py,.java,.go,.rb,.php,.cs";
 
 export const MAX_UPLOAD_MB = 15;
 
-export const TEST_TYPES = ['FUNCTIONAL', 'BOUNDARY', 'NEGATIVE', 'SECURITY', 'API'];
+// ───────── test cases ─────────
+
+export const TEST_TYPES = [
+  "FUNCTIONAL",
+  "BOUNDARY",
+  "NEGATIVE",
+  "SECURITY",
+  "API",
+];
 
 export const TEST_TYPE_LABEL = {
-  FUNCTIONAL: 'Functional',
-  BOUNDARY: 'Boundary',
-  NEGATIVE: 'Negative',
-  SECURITY: 'Security',
-  API: 'API',
-  MOBILE: 'Mobile',
+  FUNCTIONAL: "Functional",
+  BOUNDARY: "Boundary",
+  NEGATIVE: "Negative",
+  SECURITY: "Security",
+  API: "API",
+  MOBILE: "Mobile",
 };
 
 export const TEST_TYPE_TONE = {
-  FUNCTIONAL: 'info',
-  BOUNDARY: 'warning',
-  NEGATIVE: 'danger',
-  SECURITY: 'neutral',
-  API: 'success',
-  MOBILE: 'warning',
+  FUNCTIONAL: "info",
+  BOUNDARY: "warning",
+  NEGATIVE: "danger",
+  SECURITY: "neutral",
+  API: "success",
+  MOBILE: "warning",
 };
 
 export const TEST_TYPE_HINT = {
-  FUNCTIONAL: 'Features work as described',
-  BOUNDARY: 'Limits, minimums and maximums',
-  NEGATIVE: 'Invalid input and error handling',
-  SECURITY: 'Auth, roles, injection, lockout',
-  API: 'Endpoints, status codes, validation',
+  FUNCTIONAL: "Features work as described",
+  BOUNDARY: "Limits, minimums and maximums",
+  NEGATIVE: "Invalid input and error handling",
+  SECURITY: "Auth, roles, injection, lockout",
+  API: "Endpoints, status codes, validation",
 };
 
-export const TEST_TYPE_OPTIONS = ['FUNCTIONAL', 'BOUNDARY', 'NEGATIVE', 'SECURITY', 'API', 'MOBILE'].map(
-  (v) => ({ value: v, label: TEST_TYPE_LABEL[v] })
+export const TEST_TYPE_OPTIONS = [
+  "FUNCTIONAL",
+  "BOUNDARY",
+  "NEGATIVE",
+  "SECURITY",
+  "API",
+  "MOBILE",
+].map((v) => ({ value: v, label: TEST_TYPE_LABEL[v] }));
+
+export const PRIORITY_LABEL = {
+  LOW: "Low",
+  MEDIUM: "Medium",
+  HIGH: "High",
+  CRITICAL: "Critical",
+};
+export const PRIORITY_TONE = {
+  LOW: "neutral",
+  MEDIUM: "info",
+  HIGH: "warning",
+  CRITICAL: "danger",
+};
+export const PRIORITY_OPTIONS = Object.entries(PRIORITY_LABEL).map(
+  ([value, label]) => ({
+    value,
+    label,
+  }),
 );
 
-export const PRIORITY_LABEL = { LOW: 'Low', MEDIUM: 'Medium', HIGH: 'High', CRITICAL: 'Critical' };
-export const PRIORITY_TONE = { LOW: 'neutral', MEDIUM: 'info', HIGH: 'warning', CRITICAL: 'danger' };
-export const PRIORITY_OPTIONS = Object.entries(PRIORITY_LABEL).map(([value, label]) => ({
-  value,
-  label,
-}));
+// ───────── runs ─────────
 
 export const RUN_STAGES = [
-  'Requirements Analysis',
-  'Test Case Generation',
-  'Test Execution',
-  'Bug Analysis',
-  'Report Generation',
+  "Requirements Analysis",
+  "Test Case Generation",
+  "Test Execution",
+  "Bug Analysis",
+  "Report Generation",
 ];
 
 export const RUN_STATUS_LABEL = {
-  QUEUED: 'Queued',
-  RUNNING: 'Running',
-  COMPLETED: 'Completed',
-  FAILED: 'Failed',
-  CANCELLED: 'Cancelled',
+  QUEUED: "Queued",
+  RUNNING: "Running",
+  COMPLETED: "Completed",
+  FAILED: "Failed",
+  CANCELLED: "Cancelled",
 };
 export const RUN_STATUS_TONE = {
-  QUEUED: 'neutral',
-  RUNNING: 'info',
-  COMPLETED: 'success',
-  FAILED: 'danger',
-  CANCELLED: 'warning',
+  QUEUED: "neutral",
+  RUNNING: "info",
+  COMPLETED: "success",
+  FAILED: "danger",
+  CANCELLED: "warning",
 };
 
-export const RESULT_STATUS_LABEL = { PASSED: 'Passed', FAILED: 'Failed', ERROR: 'Error', SKIPPED: 'Skipped' };
-export const RESULT_STATUS_TONE = { PASSED: 'success', FAILED: 'danger', ERROR: 'warning', SKIPPED: 'neutral' };
+export const RESULT_STATUS_LABEL = {
+  PASSED: "Passed",
+  FAILED: "Failed",
+  ERROR: "Error",
+  SKIPPED: "Skipped",
+};
+export const RESULT_STATUS_TONE = {
+  PASSED: "success",
+  FAILED: "danger",
+  ERROR: "warning",
+  SKIPPED: "neutral",
+};
 
-export const HTTP_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
-export const METHOD_TONE = { GET: 'info', POST: 'success', PUT: 'warning', PATCH: 'warning', DELETE: 'danger' };
-export const SEVERITY_LABEL = { CRITICAL: 'Critical', HIGH: 'High', MEDIUM: 'Medium', LOW: 'Low' };
-export const SEVERITY_TONE = { CRITICAL: 'danger', HIGH: 'danger', MEDIUM: 'warning', LOW: 'info' };
-export const SEVERITY_OPTIONS = Object.entries(SEVERITY_LABEL).map(([value, label]) => ({ value, label }));
+export const HTTP_METHODS = [
+  "GET",
+  "POST",
+  "PUT",
+  "PATCH",
+  "DELETE",
+  "HEAD",
+  "OPTIONS",
+];
+export const METHOD_TONE = {
+  GET: "info",
+  POST: "success",
+  PUT: "warning",
+  PATCH: "warning",
+  DELETE: "danger",
+};
+
+// ───────── bugs ─────────
+
+export const SEVERITY_LABEL = {
+  CRITICAL: "Critical",
+  HIGH: "High",
+  MEDIUM: "Medium",
+  LOW: "Low",
+};
+export const SEVERITY_TONE = {
+  CRITICAL: "danger",
+  HIGH: "danger",
+  MEDIUM: "warning",
+  LOW: "info",
+};
+export const SEVERITY_OPTIONS = Object.entries(SEVERITY_LABEL).map(
+  ([value, label]) => ({ value, label }),
+);
 
 export const BUG_STATUS_LABEL = {
-  OPEN: 'Open',
-  IN_PROGRESS: 'In progress',
-  RESOLVED: 'Resolved',
-  CLOSED: 'Closed',
-  DUPLICATE: 'Duplicate',
+  OPEN: "Open",
+  IN_PROGRESS: "In progress",
+  RESOLVED: "Resolved",
+  CLOSED: "Closed",
+  DUPLICATE: "Duplicate",
 };
 export const BUG_STATUS_TONE = {
-  OPEN: 'danger',
-  IN_PROGRESS: 'info',
-  RESOLVED: 'success',
-  CLOSED: 'neutral',
-  DUPLICATE: 'warning',
+  OPEN: "danger",
+  IN_PROGRESS: "info",
+  RESOLVED: "success",
+  CLOSED: "neutral",
+  DUPLICATE: "warning",
 };
-export const BUG_STATUS_OPTIONS = Object.entries(BUG_STATUS_LABEL).map(([value, label]) => ({ value, label }));
+export const BUG_STATUS_OPTIONS = Object.entries(BUG_STATUS_LABEL).map(
+  ([value, label]) => ({ value, label }),
+);
 
-export const REPORT_STATUS_LABEL = { GENERATING: 'Generating', READY: 'Ready', FAILED: 'Failed' };
-export const REPORT_STATUS_TONE = { GENERATING: 'info', READY: 'success', FAILED: 'danger' };
+// ───────── reports and analytics ─────────
+
+export const REPORT_STATUS_LABEL = {
+  GENERATING: "Generating",
+  READY: "Ready",
+  FAILED: "Failed",
+};
+export const REPORT_STATUS_TONE = {
+  GENERATING: "info",
+  READY: "success",
+  FAILED: "danger",
+};
 
 export const HEALTH_TONE = {
-  healthy: 'success',
-  attention: 'warning',
-  risk: 'danger',
-  inconclusive: 'neutral',
-  nodata: 'neutral',
+  healthy: "success",
+  attention: "warning",
+  risk: "danger",
+  inconclusive: "neutral",
+  nodata: "neutral",
 };
 
 export const ANALYTICS_RANGES = [
-  { value: '7', label: 'Last 7 days' },
-  { value: '30', label: 'Last 30 days' },
-  { value: '90', label: 'Last 90 days' },
-  { value: '', label: 'All time' },
+  { value: "7", label: "Last 7 days" },
+  { value: "30", label: "Last 30 days" },
+  { value: "90", label: "Last 90 days" },
+  { value: "", label: "All time" },
 ];

@@ -17,6 +17,9 @@ const round1 = (n) => Math.round(n * 10) / 10;
 async function runCase(tc, ctx) {
   const t0 = Date.now();
   try {
+    if (ctx.mobile) {
+      return await aiEngine.executeMobileCase({ runId: ctx.runId, testCase: tc, target: ctx.mobile });
+    }
     if (isApiCase(tc)) {
       return await aiEngine.executeApiCase({
         baseUrl: ctx.apiBase,
@@ -78,8 +81,13 @@ async function checkTarget(url, needBrowser) {
   if (!res.ok) throw new Error(res.error || `Cannot reach ${url}`);
 }
 
+async function checkMobile(mobile) {
+  const res = await aiEngine.mobilePreflight(mobile);
+  if (!res.ok) throw new Error(res.error || 'The Android device or Appium is not ready');
+}
+
 async function processor(job) {
-  const { runId, caseIds, uiUrl, apiBase, headless, authToken } = job.data;
+  const { runId, caseIds, uiUrl, apiBase, headless, authToken, mobile } = job.data;
 
   const run = await prisma.testRun.findUnique({ where: { id: runId } });
   // Deleted, cancelled while queued, or already handled (BullMQ can re-deliver a stalled job)
@@ -90,7 +98,10 @@ async function processor(job) {
       where: { id: runId },
       data: { status: 'RUNNING', stage: 'preparing', startedAt: new Date() },
     });
-    await job.updateProgress({ message: 'Checking that the target is reachable', current: 0 });
+    await job.updateProgress({
+      message: mobile ? 'Checking Appium and the device' : 'Checking that the target is reachable',
+      current: 0,
+    });
 
     const found = await prisma.testCase.findMany({ where: { id: { in: caseIds } } });
     const byId = new Map(found.map((c) => [c.id, c]));
@@ -98,10 +109,14 @@ async function processor(job) {
     if (cases.length === 0) throw new Error('The selected test cases no longer exist');
 
     // Fail fast with a clear message instead of erroring on every case
-    if (cases.some((c) => !isApiCase(c))) await checkTarget(uiUrl, true);
-    if (cases.some(isApiCase) && apiBase !== uiUrl) await checkTarget(apiBase, false);
+    if (mobile) {
+      await checkMobile(mobile);
+    } else {
+      if (cases.some((c) => !isApiCase(c))) await checkTarget(uiUrl, true);
+      if (cases.some(isApiCase) && apiBase !== uiUrl) await checkTarget(apiBase, false);
+    }
 
-    const ctx = { runId, uiUrl, apiBase, headless: headless !== false, authToken };
+    const ctx = { runId, uiUrl, apiBase, headless: headless !== false, authToken, mobile };
     const total = cases.length;
 
     for (let i = 0; i < total; i++) {
@@ -125,10 +140,12 @@ async function processor(job) {
       });
     }
 
-    // Coverage = executed cases / all non-mobile cases in the project
+    // Coverage = executed cases / all cases in the project (mobile runs count MOBILE cases only)
     const [fresh, projectCases] = await Promise.all([
       prisma.testRun.findUnique({ where: { id: runId } }),
-      prisma.testCase.count({ where: { projectId: run.projectId, NOT: { type: 'MOBILE' } } }),
+      prisma.testCase.count({
+        where: { projectId: run.projectId, ...(mobile ? { type: 'MOBILE' } : { NOT: { type: 'MOBILE' } }) },
+      }),
     ]);
     const executed = fresh.passed + fresh.failed;
     const coverage = projectCases ? round1((executed / projectCases) * 100) : null;
@@ -172,8 +189,8 @@ async function processor(job) {
 export function startExecuteRunWorker() {
   const worker = new Worker(QUEUE_NAMES.EXECUTE_RUN, processor, {
     connection: redis,
-    concurrency: 1, // one browser test at a time keeps RAM predictable
-    lockDuration: 10 * 60 * 1000, // a single case can take minutes on a CPU-only laptop
+    concurrency: 1, // one browser or device test at a time keeps RAM predictable
+    lockDuration: 15 * 60 * 1000, // a single case can take minutes on a laptop
   });
 
   worker.on('completed', (job, result) => {

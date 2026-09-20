@@ -20,6 +20,7 @@ TYPE_GUIDE = {
     "NEGATIVE": "Test invalid or unexpected use: wrong, empty or malformed input, missing required fields, disallowed actions, unauthorised users and error handling.",
     "SECURITY": "Test security behaviour: authentication and session handling, access control between roles, injection (SQL, XSS), brute force and lockout, and exposure of sensitive data.",
     "API": "Test the HTTP endpoints described in the requirements: status codes, response bodies, validation, authentication and error responses.",
+    "MOBILE": "Verify the Android app from the user's point of view: taps, swipes and scrolling, typing into fields, permission dialogs, screen rotation, notifications and deep links, as far as the requirements describe them.",
 }
 
 # Used to pull the most relevant chunks out of the vector index for each type
@@ -29,6 +30,7 @@ TYPE_QUERY = {
     "NEGATIVE": "validation, invalid input, errors, restrictions, not allowed, must not, failure handling",
     "SECURITY": "authentication, authorization, roles, permissions, password, session, lockout, sensitive data, audit",
     "API": "API endpoint, request, response, status code, method, authentication, parameters",
+    "MOBILE": "screen, tap, button, swipe, scroll, permission, notification, deep link, rotation, back, navigation", 
 }
 
 PLATFORM_NOTE = {
@@ -41,6 +43,10 @@ API_RULES = (
     'For API test cases, test_data MUST contain "method" (GET, POST, ...), "endpoint" (path only, '
     'for example "/api/login"), "expected_status" (an integer) and, when needed, "headers" and '
     '"body" (objects). Steps describe the request and the response checks.'
+)
+MOBILE_RULES = (
+    "For MOBILE test cases, write each step as one user action on the device, and name buttons, labels and "
+    "fields exactly as the requirements do, in double quotes. If a step uses a deep link, write its exact URI."
 )
 
 
@@ -70,6 +76,9 @@ def build_messages(
     system = SYSTEM_PROMPT + "\n\n" + PLATFORM_NOTE.get(platform, PLATFORM_NOTE["WEB"])
     if test_type == "API":
         system += "\n" + API_RULES
+
+    if test_type == "MOBILE":
+        system += "\n" + MOBILE_RULES
 
     lines = [
         f'Write {count} {test_type} test cases for "{project_name or "the application"}".',

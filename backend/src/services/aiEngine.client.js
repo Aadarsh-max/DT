@@ -56,6 +56,13 @@ export const fromEngine = (r) => ({
   response: r.response ?? null,
 });
 
+const mobileTarget = (m) => ({
+  apk_path: m.apkPath || null,
+  app_package: m.appPackage || null,
+  app_activity: m.appActivity || null,
+  udid: m.udid || null,
+  auto_grant: !!m.autoGrant,
+});
 export const aiEngine = {
   async indexFile({ projectId, requirementId, filePath, filename }) {
     const buffer = await fs.readFile(filePath);
@@ -284,6 +291,41 @@ export const aiEngine = {
       json: { project_id: projectId, message, context, history },
       timeoutMs: 2 * 60 * 1000,
     });
+  },
+
+  // ───────── mobile ─────────
+
+  mobileStatus() {
+    return call("/mobile/status", { timeoutMs: 30 * 1000 });
+  },
+
+  mobilePreflight(target) {
+    return call("/mobile/preflight", {
+      method: "POST",
+      json: { target: mobileTarget(target) },
+      timeoutMs: 6 * 60 * 1000, // installing an APK and starting the driver can be slow the first time
+    });
+  },
+
+  async executeMobileCase({ runId, testCase, target }) {
+    const data = await call("/mobile/case", {
+      method: "POST",
+      json: {
+        run_id: runId,
+        case_id: testCase.id,
+        title: testCase.title,
+        steps: Array.isArray(testCase.steps) ? testCase.steps : [],
+        preconditions: testCase.preconditions,
+        expected_result: testCase.expectedResult,
+        test_data:
+          testCase.testData && typeof testCase.testData === "object"
+            ? testCase.testData
+            : null,
+        target: mobileTarget(target),
+      },
+      timeoutMs: 12 * 60 * 1000,
+    });
+    return fromEngine(data);
   },
   // ───────── cleanup ─────────
 

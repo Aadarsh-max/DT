@@ -3,7 +3,7 @@ from typing import Any, Literal, Optional
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-TestType = Literal["FUNCTIONAL", "BOUNDARY", "NEGATIVE", "SECURITY", "API"]
+TestType = Literal["FUNCTIONAL", "BOUNDARY", "NEGATIVE", "SECURITY", "API", "MOBILE"]
 Platform = Literal["WEB", "API", "MOBILE"]
 Priority = Literal["LOW", "MEDIUM", "HIGH", "CRITICAL"]
 
