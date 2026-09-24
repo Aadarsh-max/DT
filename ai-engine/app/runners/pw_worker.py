@@ -8,7 +8,6 @@ Protocol: one JSON object on stdin, one line "@@RESULT@@{json}" on stdout.
 Do not import anything from `app` here, so startup stays fast.
 """
 import asyncio
-import base64
 import json
 import re
 import sys
@@ -17,6 +16,12 @@ from urllib.parse import urljoin, urlparse
 
 MARK = "@@RESULT@@"
 VIEWPORT = {"width": 1280, "height": 800}
+
+# Transient network errors worth a short retry, instead of failing the whole test immediately
+NETWORK_ERRORS = (
+    "ERR_NAME_NOT_RESOLVED", "ERR_INTERNET_DISCONNECTED", "ERR_CONNECTION_RESET",
+    "ERR_CONNECTION_REFUSED", "ERR_NETWORK_CHANGED", "ERR_TIMED_OUT",
+)
 
 SNAPSHOT_JS = r"""
 () => {
@@ -77,7 +82,7 @@ def _short(e, n=220):
 
 
 def _norm(s):
-    return re.sub(r"\s+", " ", s or "").strip().lower()
+    return re.sub(r"\s+", " ", s or "").strip()
 
 
 def _import_playwright():
@@ -127,6 +132,24 @@ async def _after_action(page):
     await asyncio.sleep(0.4)
 
 
+async def _goto_with_retry(page, url, attempts=3):
+    """A freshly-launched browser can occasionally race ahead of DNS/network readiness.
+    Retry a couple of times on transient network errors before giving up."""
+    last = None
+    for i in range(attempts):
+        try:
+            await page.goto(url, wait_until="domcontentloaded")
+            return
+        except Exception as e:  # noqa: BLE001
+            last = e
+            transient = any(code in str(e) for code in NETWORK_ERRORS)
+            if not transient or i == attempts - 1:
+                raise
+            await asyncio.sleep(1.5 * (i + 1))
+    if last:
+        raise last
+
+
 # ───────── locating elements ─────────
 
 def _describe(t):
@@ -134,7 +157,7 @@ def _describe(t):
     return f'{t.get("by")}{role} "{t.get("value")}"'
 
 
-def _candidates(page, t):
+def _candidates(page, t, prefer_label=False):
     by, v, role = t.get("by", "text"), t.get("value", ""), t.get("role")
     rx = re.compile(re.escape(v), re.I)
     out = []
@@ -151,6 +174,12 @@ def _candidates(page, t):
     if by == "testid":
         add(lambda: page.get_by_test_id(v))
         return out
+
+    # For fill/clear, try the field associated with a label FIRST. get_by_text() can otherwise
+    # match the <label> element itself (it has that visible text too), and filling a <label>
+    # always fails with "Element is not an <input>...".
+    if prefer_label:
+        add(lambda: page.get_by_label(rx))
 
     order = {
         "role": ["role", "text", "label", "placeholder"],
@@ -182,8 +211,8 @@ async def _first_visible(locator):
     return None
 
 
-async def _find(page, target, timeout_ms):
-    cands = _candidates(page, target)
+async def _find(page, target, timeout_ms, prefer_label=False):
+    cands = _candidates(page, target, prefer_label=prefer_label)
     deadline = time.monotonic() + timeout_ms / 1000
     while True:
         for loc in cands:
@@ -217,13 +246,13 @@ async def _act(page, a, base_url, t):
     kind = a["action"]
     target = a.get("target")
     value = str(a.get("value") or "")
-    check_t = min(t, 5000)
+    check_t = min(t, 15000)
 
     if kind == "goto":
         url = urljoin(base_url, value)
         if urlparse(url).scheme not in ("http", "https"):
             raise ValueError("Only http and https addresses can be opened")
-        await page.goto(url, wait_until="domcontentloaded")
+        await _goto_with_retry(page, url)
         await _settle(page, idle=True)
         return
 
@@ -295,7 +324,9 @@ async def _act(page, a, base_url, t):
                 raise CheckFailed(f"Expected {_describe(target)} to be hidden, but it is visible")
             await asyncio.sleep(0.25)
 
-    el = await _find(page, target, t)
+    # fill/clear resolve through the associated label first, so a bare label element is never
+    # mistaken for the input it describes
+    el = await _find(page, target, t, prefer_label=(kind in ("fill", "clear")))
     if kind == "click":
         await el.click()
         await _after_action(page)
@@ -354,7 +385,7 @@ async def do_snapshot(p):
             ctx = await browser.new_context(viewport=VIEWPORT, ignore_https_errors=True)
             page = await ctx.new_page()
             try:
-                await page.goto(url, wait_until="domcontentloaded", timeout=30000)
+                await _goto_with_retry(page, url)
             except Exception as e:  # noqa: BLE001
                 return {"ok": False, "code": "UNREACHABLE", "error": f"Could not open {url}: {_short(e)}"}
             await _settle(page, idle=True)
@@ -391,7 +422,7 @@ async def do_execute(p):
             page.on("pageerror", lambda e: page_errors.append(str(e)[:200]))
 
             try:
-                await page.goto(base_url, wait_until="domcontentloaded")
+                await _goto_with_retry(page, base_url)
                 await _settle(page, idle=True)
                 logs.append(f"Opened {page.url}")
             except Exception as e:  # noqa: BLE001
@@ -459,6 +490,8 @@ async def do_pdf(p):
                 'AI Testing Engineer &middot; Page <span class="pageNumber"></span> of '
                 '<span class="totalPages"></span></div>'
             )
+            import base64
+
             data = await page.pdf(
                 format="A4",
                 print_background=True,
@@ -472,7 +505,10 @@ async def do_pdf(p):
             return {"ok": False, "code": "PDF_FAILED", "error": f"Could not render the PDF: {_short(e)}"}
         finally:
             await browser.close()
+
+
 MODES = {"check": do_check, "snapshot": do_snapshot, "execute": do_execute, "pdf": do_pdf}
+
 
 def main():
     try:
@@ -483,7 +519,6 @@ def main():
         result = {"ok": False, "code": "TIMEOUT", "error": "The browser step timed out"}
     except Exception as e:  # noqa: BLE001
         result = {"ok": False, "code": "WORKER_ERROR", "error": f"{type(e).__name__}: {_short(e)}"}
-    # ensure_ascii keeps the output safe on any Windows console encoding
     sys.stdout.write("\n" + MARK + json.dumps(result) + "\n")
     sys.stdout.flush()
 

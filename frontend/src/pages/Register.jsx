@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Lock, Mail, User } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, User } from 'lucide-react';
 import Input from '../components/ui/Input';
 import Button from '../components/ui/Button';
 import { useToast } from '../components/ui/Toast';
@@ -15,6 +15,8 @@ export default function Register() {
   const [form, setForm] = useState({ name: '', email: '', password: '', confirm: '' });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const onChange = (e) => setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
 
@@ -65,29 +67,56 @@ export default function Register() {
           onChange={onChange}
           required
         />
-        <Input
-          label="Password"
-          name="password"
-          type="password"
-          icon={Lock}
-          placeholder="At least 8 characters, with a number"
-          autoComplete="new-password"
-          value={form.password}
-          onChange={onChange}
-          required
-        />
-        <Input
-          label="Confirm password"
-          name="confirm"
-          type="password"
-          icon={Lock}
-          placeholder="Repeat your password"
-          autoComplete="new-password"
-          value={form.confirm}
-          onChange={onChange}
-          error={errors.confirm}
-          required
-        />
+
+        <div className="relative">
+          <Input
+            label="Password"
+            name="password"
+            type={showPassword ? 'text' : 'password'}
+            icon={Lock}
+            placeholder="At least 8 characters, with a number"
+            autoComplete="new-password"
+            value={form.password}
+            onChange={onChange}
+            className="pr-10"
+            required
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword((s) => !s)}
+            aria-label={showPassword ? 'Hide password' : 'Show password'}
+            tabIndex={-1}
+            className="absolute right-3 top-[34px] text-muted hover:text-brand"
+          >
+            {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+          </button>
+        </div>
+
+        <div className="relative">
+          <Input
+            label="Confirm password"
+            name="confirm"
+            type={showConfirm ? 'text' : 'password'}
+            icon={Lock}
+            placeholder="Repeat your password"
+            autoComplete="new-password"
+            value={form.confirm}
+            onChange={onChange}
+            error={errors.confirm}
+            className="pr-10"
+            required
+          />
+          <button
+            type="button"
+            onClick={() => setShowConfirm((s) => !s)}
+            aria-label={showConfirm ? 'Hide password' : 'Show password'}
+            tabIndex={-1}
+            className={`absolute right-3 text-muted hover:text-brand ${errors.confirm ? 'top-[34px]' : 'top-[34px]'}`}
+          >
+            {showConfirm ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+          </button>
+        </div>
+
         <Button type="submit" size="lg" loading={loading} className="w-full">
           Create account
         </Button>

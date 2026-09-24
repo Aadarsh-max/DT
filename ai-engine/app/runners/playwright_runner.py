@@ -94,7 +94,7 @@ async def execute(
             "plan": plan,
             "headless": headless,
             "screenshot_path": str(screenshot_path) if screenshot_path else None,
-            "step_timeout_ms": 8000,
+            "step_timeout_ms": 15000,
         },
         timeout=170,
     )

@@ -12,7 +12,7 @@ class OllamaClient:
     def __init__(self) -> None:
         self._client = httpx.AsyncClient(
             base_url=settings.ollama_base_url,
-            timeout=httpx.Timeout(300.0, connect=5.0),
+            timeout=httpx.Timeout(600.0, connect=5.0),
         )
 
     async def is_up(self) -> bool:
@@ -43,7 +43,12 @@ class OllamaClient:
         temperature: float = 0.2,
         max_tokens: Optional[int] = None,
     ) -> str:
-        options: dict = {"num_ctx": settings.ollama_num_ctx, "temperature": temperature}
+        options: dict = {
+            "num_ctx": settings.ollama_num_ctx,
+            "temperature": temperature,
+            "repeat_penalty": 1.15,
+            "repeat_last_n": 128,
+        }
         if max_tokens:
             options["num_predict"] = max_tokens
 
