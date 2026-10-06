@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ChevronDown, LogOut, Menu, Moon, Search, Settings, Sun } from 'lucide-react';
+import { ChevronDown, LogOut, Menu, Moon, Settings, Sun } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../hooks/useAuth';
 import { formatRole, getInitials } from '../../utils/formatters';
@@ -88,18 +88,9 @@ export default function Topbar({ onMenu }) {
         <Menu className="size-5" />
       </button>
 
-      <div className="relative min-w-0 flex-1 sm:max-w-md">
-        <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted" />
-        <input
-          placeholder="Search tests, projects, bugs..."
-          className="h-10 w-full rounded-xl border border-line bg-page pl-9 pr-3 text-sm text-ink placeholder:text-muted focus:border-primary focus:outline-2 focus:outline-primary/20 sm:pr-14"
-        />
-        <kbd className="pointer-events-none absolute right-3 top-1/2 hidden -translate-y-1/2 rounded-md border border-line bg-card px-1.5 py-0.5 text-[10px] text-muted sm:block">
-          ⌘ K
-        </kbd>
-      </div>
+      <div className="flex-1" />
 
-      <div className="ml-auto flex items-center gap-1 sm:gap-2">
+      <div className="flex items-center gap-1 sm:gap-2">
         <button
           onClick={toggle}
           aria-label="Toggle theme"
