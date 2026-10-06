@@ -11,7 +11,6 @@ export default function Register() {
   const { register } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
-
   const [form, setForm] = useState({ name: '', email: '', password: '', confirm: '' });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});

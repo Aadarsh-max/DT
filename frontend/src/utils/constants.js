@@ -28,7 +28,6 @@ export const NAV_ITEMS = [
   { label: "Analytics", path: "/analytics", icon: BarChart3, phase: 8 },
   { label: "Settings", path: "/settings", icon: Settings, phase: 3 },
   { label: "Team", path: "/team", icon: Users, phase: 10 },
-  { label: "Integrations", path: "/integrations", icon: Puzzle, phase: 10 },
 ];
 
 export const PLATFORM_OPTIONS = [
